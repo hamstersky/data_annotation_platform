@@ -1,7 +1,7 @@
 from random import random
 
 from bokeh.layouts import column
-from bokeh.models import Button, Slider, ColumnDataSource, HoverTool, CustomJS
+from bokeh.models import Button, Slider, ColumnDataSource, HoverTool, DataTable, TableColumn
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc
 from bokeh.events import Tap
@@ -138,18 +138,26 @@ update_frame('value', 1, 1)
 #     print(selected)
 
 def tap_handler(attr, old, new):
-    # selected = source.selected.indices
-    # source.selected.indices = old + new
-    # selected = source.selected.indices
-    print(source.data['id'][new[0]])
-    # print(new[0])
-    # print(source.data)
-    # print(attr)
-    # print(old)
+    global table_source
+    if len(new) > 0:
+        traj_id = source.data['id'][new[0]]
+        table_source.stream(dict(traj_id=[traj_id]))
 
 # p.on_event(Tap, tap_handler)
 # l.data_source.on_change('tap', tap_handler)
 source.selected.on_change('indices', tap_handler)
+columns = [
+    TableColumn(field="traj_id", title="Trajectory id"),
+]
+table_source = ColumnDataSource(data=dict(traj_id=[]))
+table = DataTable(source=table_source, columns=columns)
+connect = Button(label='Connect')
+
+def connect_handler():
+    global table_source
+    table_source.data['traj_id'] = []
+
+connect.on_click(connect_handler)
 
 # put the button and plot in a layout and add to the document
-curdoc().add_root(column(slider, p))
+curdoc().add_root(column(slider, p, table, connect))
