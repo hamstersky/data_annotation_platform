@@ -1,3 +1,3 @@
 #!/bin/bash
 source venv/bin/activate
-bokeh serve prototype.py --dev prototype.py
+bokeh serve main --dev main.py
