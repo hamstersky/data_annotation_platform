@@ -50,36 +50,18 @@ def get_data_range(frame_nr):
     subset = data[(frame_nr >= data['frame_in']) & (frame_nr <= data['frame_out'] + 400)]
     subset_segments = segments.get_frame_subset(frame_nr)
 
-    N = subset.shape[0]
+    update_data_source(trajectories, subset)
+    update_data_source(segments_lines, subset_segments)
 
+def update_data_source(source, new_data):
+    # TODO: Extract this as a global?
     colors = ['red', 'magenta', 'green', 'orange', 'cyan', 'yellow', 'blue', 'black', 'navy']
-    # Store list of colors for CustomJS callback
-    default_lc = [colors[int(i)] for i in subset['class']]
-
-    # Merge two dictionaries
-    trajectories.data_source.data = {
-        **subset.to_dict(orient='list'),
-        'id': subset.index.values,
-        **{
-            'line_color': default_lc,
-            'line_alpha': [0.8] * N,
-            'line_width': [2.0] * N,
-            'line_dash': ['solid'] * N  # 'solid', 'dashed', 'dotted', 'dotdash', 'dashdot'
-        }
-    }
-
-    N = subset_segments.shape[0]
-    segment_colors = ['blue' for _ in subset_segments['class']]
+    line_colors = [colors[int(i)] for i in new_data['class']]
     # TODO: Better way to include the id / index?
-    segments_lines.data_source.data = {
-        **subset_segments.to_dict(orient='list'),
-        'id': subset_segments.index.values,
-        **{
-            'line_color': segment_colors,
-            'line_alpha': [0.8] * N,
-            'line_width': [2.0] * N,
-            'line_dash': ['solid'] * N  # 'solid', 'dashed', 'dotted', 'dotdash', 'dashdot'
-        }
+    source.data_source.data = {
+        **new_data.to_dict(orient='list'),
+        'id': new_data.index.values,
+        'line_color': line_colors,
     }
 
 def plot_image(img):
@@ -232,30 +214,31 @@ def setup_renderers():
     trajectories = plot.multi_line(
         source=trajectories_source,
         line_color='line_color',
-        line_alpha='line_alpha',
-        line_width='line_width',
-        line_dash='line_dash',
+        line_alpha=0.8,
+        line_width=2.0,
+        line_dash='solid',
         hover_line_width=2.0,
         hover_line_alpha=1.0,
-        selection_line_width=3.0,
+        selection_line_width=4.0,
         selection_line_alpha=1.0,
-        selection_line_color='red',
-        nonselection_line_width=2,
-        nonselection_line_alpha=0.8
+        # selection_line_color='red',
+        nonselection_line_width=2.0,
+        nonselection_line_alpha=0.7
     )
 
     segments_lines = plot.multi_line(
         source=segments_source,
         line_color='line_color',
-        line_alpha='line_alpha',
-        line_width='line_width',
-        line_dash='line_dash',
+        line_alpha=0.8,
+        line_width=2.0,
+        line_dash='solid',
         hover_line_width=2.0,
         hover_line_alpha=1.0,
-        selection_line_width=2.0,
+        selection_line_width=4.0,
+        # selection_line_color='black',
         selection_line_alpha=1.0,
-        # nonselection_line_width=0.8,
-        # nonselection_line_alpha=0.3
+        nonselection_line_width=2.0,
+        nonselection_line_alpha=0.7
     )
 
     return (img_plot, trajectories, segments_lines)
