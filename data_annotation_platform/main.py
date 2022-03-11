@@ -6,18 +6,16 @@ from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc
 from bokeh.events import Tap
 import cv2
-import pandas as pd
 import numpy as np
 from segments_data import SegmentsData
+from trajectories_data import TrajectoriesData
 
 cap_w = 640
 cap_h = 360
 
 cap = cv2.VideoCapture('../videos/video.m4v')
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-data = pd.read_pickle('../data/broken_trajectories.pkl')
-data.reset_index(inplace=True)
-data = data[['xs', 'ys', 'class', 'frame_in', 'frame_out']]
+trajectories = TrajectoriesData('../data/broken_trajectories.pkl')
 segments = SegmentsData('../data/segments.pkl')
 
 # ===============
@@ -43,14 +41,14 @@ def get_image_from_frame(frame):
     return img_orig
 
 def get_data_range(frame_nr):
-    global trajectories
+    global trajectories_lines
     global segments_lines
     global segments
-    global data
-    subset = data[(frame_nr >= data['frame_in']) & (frame_nr <= data['frame_out'] + 400)]
+    global trajectories
+    subset = trajectories.get_frame_subset(frame_nr)
     subset_segments = segments.get_frame_subset(frame_nr)
 
-    update_data_source(trajectories, subset)
+    update_data_source(trajectories_lines, subset)
     update_data_source(segments_lines, subset_segments)
 
 def update_data_source(source, new_data):
@@ -128,8 +126,8 @@ def connect_handler():
     pairs = zip(ids, ids[1:])
     pairs = [tuple(map(int, x)) for x in pairs]
     for t1_ID, t2_ID in pairs:
-        t1 = data.iloc[t1_ID]
-        t2 = data.iloc[t2_ID]
+        t1 = trajectories.data.iloc[t1_ID]
+        t2 = trajectories.data.iloc[t2_ID]
         segment = segments.create_segment(t1, t2)
         segments.append_segment(segment)
     segments_table_source.data = segments.data
@@ -243,12 +241,12 @@ def setup_renderers():
 
     return (img_plot, trajectories, segments_lines)
 
-img_plot, trajectories, segments_lines = setup_renderers()
+img_plot, trajectories_lines, segments_lines = setup_renderers()
 
 plot.add_tools(HoverTool(
     show_arrow=False,
     line_policy='nearest',
-    renderers=[trajectories, segments_lines],
+    renderers=[trajectories_lines, segments_lines],
     tooltips=[("id", "@id"), ("frame_in", "@frame_in"), ("frame_out", "@frame_out")]
 ))   
 
