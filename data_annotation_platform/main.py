@@ -40,27 +40,9 @@ def get_image_from_frame(frame):
     img_view[:, :, :] = img_alpha
     return img_orig
 
-def get_data_range(frame_nr):
-    global trajectories_lines
-    global segments_lines
-    global segments
-    global trajectories
-    subset = trajectories.get_frame_subset(frame_nr)
-    subset_segments = segments.get_frame_subset(frame_nr)
-
-    update_data_source(trajectories_lines, subset)
-    update_data_source(segments_lines, subset_segments)
-
-def update_data_source(source, new_data):
-    # TODO: Extract this as a global?
-    colors = ['red', 'magenta', 'green', 'orange', 'cyan', 'yellow', 'blue', 'black', 'navy']
-    line_colors = [colors[int(i)] for i in new_data['class']]
-    # TODO: Better way to include the id / index?
-    source.data_source.data = {
-        **new_data.to_dict(orient='list'),
-        'id': new_data.index.values,
-        'line_color': line_colors,
-    }
+def update_sources(frame_nr):
+    segments.update_data_source(frame_nr)
+    trajectories.update_data_source(frame_nr)
 
 def plot_image(img):
     img_plot.data_source.data['image'] = [img]
@@ -71,9 +53,9 @@ def clear_trajectories():
 
 def update_selection(old, new):
     if new == []:
-        trajectories_source.selected.indices = []
+        trajectories.source.selected.indices = []
     else:
-        trajectories_source.selected.indices = old + new
+        trajectories.source.selected.indices = old + new
 
 def update_stats():
     total = segments.data.shape[0]
@@ -94,7 +76,7 @@ def update_frame(attr, old, new):
     frame = get_frame(frame_nr)
     img = get_image_from_frame(frame)
     plot_image(img)
-    get_data_range(frame_nr)
+    update_sources(frame_nr)
 
 lock = False
 def tap_handler(attr, old, new):
@@ -103,7 +85,7 @@ def tap_handler(attr, old, new):
     if not lock:
         lock = True
         if len(new) > 0:
-            traj_id = trajectories_source.data['id'][new[0]]
+            traj_id = trajectories.source.data['id'][new[0]]
             table_source.stream(dict(traj_id=[traj_id]))
             update_selection(old, new)
         else:
@@ -113,7 +95,7 @@ def tap_handler(attr, old, new):
 def segments_tap_handler(attr, old, new):
     global table_source
     if len(new) > 0:
-        traj_id = segments_source.data['id'][new[0]]
+        traj_id = segments.source.data['id'][new[0]]
         table_source.stream(dict(traj_id=[traj_id]))
 
 def connect_handler():
@@ -209,8 +191,8 @@ def setup_renderers():
         level='image'
     )
 
-    trajectories = plot.multi_line(
-        source=trajectories_source,
+    trajectories_lines = plot.multi_line(
+        source=trajectories.source,
         line_color='line_color',
         line_alpha=0.8,
         line_width=2.0,
@@ -225,7 +207,7 @@ def setup_renderers():
     )
 
     segments_lines = plot.multi_line(
-        source=segments_source,
+        source=segments.source,
         line_color='line_color',
         line_alpha=0.8,
         line_width=2.0,
@@ -239,7 +221,7 @@ def setup_renderers():
         nonselection_line_alpha=0.7
     )
 
-    return (img_plot, trajectories, segments_lines)
+    return (img_plot, trajectories_lines, segments_lines)
 
 img_plot, trajectories_lines, segments_lines = setup_renderers()
 
@@ -279,12 +261,16 @@ selection_table_cols = [TableColumn(field="traj_id", title="Trajectory id")]
 selection_table = DataTable(source=table_source, columns=selection_table_cols)
 
 # Selection callbacks
-trajectories_source.selected.on_change('indices', tap_handler)
+# trajectories_source.selected.on_change('indices', tap_handler)
 # segments_source.selected.on_change('indices', segments_tap_handler)
 
 # Segments table
 segments_table_cols = [TableColumn(field=c, title=c) for c in segments.data.columns]
 segments_table = DataTable(source=segments_table_source, columns=segments_table_cols)
+
+# TODO: Find a good place for this 
+trajectories.source.selected.on_change('indices', tap_handler)
+segments.source.selected.on_change('indices', segments_tap_handler)
 
 # Create layout
 curdoc().add_root(layout([

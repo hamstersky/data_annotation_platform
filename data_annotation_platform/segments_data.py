@@ -40,4 +40,3 @@ class SegmentsData(Data):
 
     def append_segment(self, segment):
         self.data = pd.concat([self.data, segment])
-
