@@ -51,6 +51,7 @@ def clear_trajectories():
     table_source.data['traj_id'] = []
     update_selection([], [])
 
+# TODO: Now that the source belongs in the Data class, consider moving this over there
 def update_selection(old, new):
     if new == []:
         trajectories.source.selected.indices = []
@@ -103,10 +104,10 @@ def connect_handler():
     global segments
     # TODO: Make a connect method that connects a list of ids
     # Can't be part of segments as it doesn't have access to the whole data
-    # segments.connect(table_source.data['traj_id'])
+    # Creates segments needed to connect the supplied trajectories (ids)
+    # Connections will be done in the order of the supplied ids
     ids = table_source.data['traj_id']
-    pairs = zip(ids, ids[1:])
-    pairs = [tuple(map(int, x)) for x in pairs]
+    pairs = [tuple(map(int, x)) for x in zip(ids, ids[1:])]
     for t1_ID, t2_ID in pairs:
         t1 = trajectories.data.iloc[t1_ID]
         t2 = trajectories.data.iloc[t2_ID]

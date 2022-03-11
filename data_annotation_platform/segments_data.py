@@ -17,16 +17,6 @@ class SegmentsData(Data):
         self.data.at[id, 'correct'] = new_label
         return new_label
 
-    # TODO: Doesn't belong here as doesn't have access to all data
-    # Creates segments needed to connect the supplied trajectories (ids)
-    # Connections will be done in the order of the supplied ids
-    def connect(self, ids):
-        # Generate pairs of trajectories to be connected with a segment
-        pairs = zip(ids, ids[1:])
-        for t1_ID, t2_ID in pairs:
-            segment = self.create_segment(t1_ID, t2_ID)
-            self.append_segment(segment)
-
     def create_segment(self, t1, t2):
         segment = pd.DataFrame({
             'class': 8,
