@@ -1,13 +1,9 @@
 import pandas as pd
+from data import Data
 
-class SegmentsData():
+class SegmentsData(Data):
     def __init__(self, source_path):
-        self.data = pd.read_pickle(source_path)
-        # TODO: Make the input data already in a format where this will not be necessary
-        self.data.reset_index(inplace=True)
-        # Extract only relevant features
-        self.data = self.data[['xs', 'ys', 'class', 'frame_in', 'frame_out']]
-        # In the initial state all segments are correct
+        super().__init__(source_path)
         self.data['correct'] = True
 
     def get_frame_subset(self, frame_nr):
