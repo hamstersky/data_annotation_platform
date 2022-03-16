@@ -1,7 +1,7 @@
 from random import random
 
 from bokeh.layouts import column, layout
-from bokeh.models import Button, Slider, ColumnDataSource, HoverTool, DataTable, TableColumn, Paragraph
+from bokeh.models import Button, Slider, ColumnDataSource, HoverTool, DataTable, TableColumn, Paragraph, NumericInput
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc
 from bokeh.events import Tap
@@ -113,6 +113,23 @@ def wrong_handler():
     stats.text = update_stats()
     segments_table_source.data['correct'] = segments.get_data()['correct']     
 
+def jump_to_handler(attr, old, new):
+    slider.value = new
+    slider.trigger('value_throttled', 0, new)
+    
+def frame_button_handler(value):
+    def callback():
+        new = slider.value + value
+        if new > 1 and new <= slider.end:
+            slider.value = new
+            slider.trigger('value_throttled', 0, slider.value)
+    return callback
+
+# def jump_to_frame(frame_nr):
+#     def callback(attr, old, new):
+#         update_frame(attr, old, new)
+
+
 # ===============
 # Sources setup
 # ===============
@@ -125,19 +142,33 @@ def setup_sources():
 table_source, segments_table_source = setup_sources()
 
 # Setup initial frame
-update_frame('value', 1, 1)
+update_frame('value', 0, 0)
 
 # ===============
 # Widgets / Layout
 # ===============
 
 # Slider
-slider = Slider(start=1, end=total_frames + 10, value=1, step=1)
+slider = Slider(start=0, end=total_frames-1, value=0, step=1)
 slider.on_change('value_throttled', update_frame)
 
+# Jump to frame
+jump_to = NumericInput(low=1, high=total_frames, placeholder='Jump to specific frame')
+jump_to.on_change('value', jump_to_handler)
+
 # Buttons 
-forward = Button(label='+30 frames')
-forward.on_click(forward_frames)
+btn_size = 75
+second_forward = Button(label='+1s', sizing_mode='fixed', height=btn_size, width=btn_size)
+second_forward.on_click(frame_button_handler(30))
+
+second_backward = Button(label='-1s', sizing_mode='fixed', height=btn_size, width=btn_size)
+second_backward.on_click(frame_button_handler(-30))
+
+next_frame = Button(label='+1 frame', sizing_mode='fixed', height=btn_size, width=btn_size)
+next_frame.on_click(frame_button_handler(1))
+
+previous_frame = Button(label='-1 frame', sizing_mode='fixed', height=btn_size, width=btn_size)
+previous_frame.on_click(frame_button_handler(-1))
 
 connect = Button(label='Connect')
 connect.on_click(connect_handler)
@@ -164,7 +195,7 @@ segments.get_source().selected.on_change('indices', bind_cb_obj(segments))
 
 # Create layout
 curdoc().add_root(layout([
-    [plot.plot, [slider, forward, connect, wrong]],
+    [plot.plot, [slider, jump_to, [second_backward, previous_frame, next_frame, second_forward], connect, wrong]],
     [stats],
     [selection_table, segments_table]
 ]))
