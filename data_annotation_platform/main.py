@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
+from trajectory_plot import TrajectoryPlot
 
 cap_w = 640
 cap_h = 360
@@ -17,6 +18,7 @@ cap = cv2.VideoCapture('../videos/video.m4v')
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 trajectories = TrajectoriesData('../data/broken_trajectories.pkl')
 segments = SegmentsData('../data/segments.pkl')
+plot = TrajectoryPlot(trajectories, segments)
 
 # ===============
 # Helpers
@@ -44,9 +46,6 @@ def update_sources(frame_nr):
     segments.update_data_source(frame_nr)
     trajectories.update_data_source(frame_nr)
 
-def plot_image(img):
-    img_plot.data_source.data['image'] = [img]
-
 def clear_trajectories(trigger):
     table_source.data['traj_id'] = []
     trigger.update_selected_data([], [])
@@ -69,7 +68,7 @@ def update_frame(attr, old, new):
     frame_nr = new
     frame = get_frame(frame_nr)
     img = get_image_from_frame(frame)
-    plot_image(img)
+    plot.update_img(img)
     update_sources(frame_nr)
 
 def bind_cb_obj(trigger):
@@ -137,89 +136,15 @@ def wrong_handler():
     segments_table_source.data['correct'] = segments.get_data()['correct']     
 
 # ===============
-# Plot setup
+# Sources setup
 # ===============
 
-def setup_plot():
-    p = figure(
-        tools='pan,box_zoom,wheel_zoom,tap,save,reset',
-        active_scroll='wheel_zoom',
-        active_tap='auto',
-        x_range=(0, cap_w),
-        y_range=(0, cap_h)
-    )
-    p.toolbar.logo = None
-    p.grid.visible = False
-    p.axis.visible = False
-    p.outline_line_width = 0
-    p.plot_height = 360
-    p.plot_width = 640
-    return p
-
-plot = setup_plot()
-
 def setup_sources():
-    img_source = ColumnDataSource(data=dict(
-        image=[]
-    ))
-
     table_source = ColumnDataSource(data=dict(traj_id=[]))
     segments_table_source = ColumnDataSource(segments.get_data())
-    return (img_source, table_source, segments_table_source)
+    return (table_source, segments_table_source)
 
-img_source, table_source, segments_table_source = setup_sources()
-
-def setup_renderers():
-    img_plot = plot.image_rgba(
-        source=img_source,
-        image='image',
-        x=0,
-        y=0,
-        dw=cap_w,
-        dh=cap_h,
-        level='image'
-    )
-
-    trajectories_lines = plot.multi_line(
-        source=trajectories.get_source(),
-        line_color='line_color',
-        line_alpha=0.8,
-        line_width=2.0,
-        line_dash='solid',
-        hover_line_width=2.0,
-        hover_line_alpha=1.0,
-        selection_line_width=4.0,
-        selection_line_alpha=1.0,
-        # selection_line_color='red',
-        nonselection_line_width=2.0,
-        nonselection_line_alpha=0.7
-    )
-
-    segments_lines = plot.multi_line(
-        source=segments.get_source(),
-        line_color='line_color',
-        line_alpha=0.8,
-        line_width=2.0,
-        line_dash='solid',
-        hover_line_width=2.0,
-        hover_line_alpha=1.0,
-        selection_line_width=4.0,
-        # selection_line_color='black',
-        selection_line_alpha=1.0,
-        nonselection_line_width=2.0,
-        nonselection_line_alpha=0.7
-    )
-
-    return (img_plot, trajectories_lines, segments_lines)
-
-img_plot, trajectories_lines, segments_lines = setup_renderers()
-
-plot.add_tools(HoverTool(
-    show_arrow=False,
-    line_policy='nearest',
-    renderers=[trajectories_lines, segments_lines],
-    tooltips=[("id", "@id"), ("frame_in", "@frame_in"), ("frame_out", "@frame_out")]
-))   
+table_source, segments_table_source = setup_sources()
 
 # Setup initial frame
 update_frame('value', 1, 1)
@@ -261,7 +186,7 @@ segments.get_source().selected.on_change('indices', bind_cb_obj(segments))
 
 # Create layout
 curdoc().add_root(layout([
-    [plot, [slider, forward, connect, wrong]],
+    [plot.plot, [slider, forward, connect, wrong]],
     [stats],
     [selection_table, segments_table]
 ]))
