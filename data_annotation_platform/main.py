@@ -10,6 +10,7 @@ import numpy as np
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
+from helpers import get_frame_from_cap, get_image_from_frame, update_sources
 
 cap_w = 640
 cap_h = 360
@@ -23,29 +24,6 @@ plot = TrajectoryPlot(trajectories, segments)
 # ===============
 # Helpers
 # ===============
-
-def get_frame(frame_nr):
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_nr)
-    _, frame = cap.read()
-    return frame
-
-def get_image_from_frame(frame):
-    img = frame[::-1, :, ::-1]
-
-    h, w, c = img.shape
-
-    img_orig = np.zeros((h, w), dtype=np.uint32)
-    img_view = img_orig.view(dtype=np.uint8).reshape((h, w, 4))
-    img_alpha = np.zeros((h, w, 4), dtype=np.uint8)
-    img_alpha[:, :, 3] = 255
-    img_alpha[:, :, :3] = img
-    img_view[:, :, :] = img_alpha
-    return img_orig
-
-def update_sources(frame_nr):
-    segments.update_data_source(frame_nr)
-    trajectories.update_data_source(frame_nr)
-
 def clear_trajectories(trigger):
     table_source.data['traj_id'] = []
     trigger.update_selected_data([], [])
@@ -66,10 +44,10 @@ def update_stats():
 
 def update_frame(attr, old, new):
     frame_nr = new
-    frame = get_frame(frame_nr)
+    frame = get_frame_from_cap(cap, frame_nr)
     img = get_image_from_frame(frame)
     plot.update_img(img)
-    update_sources(frame_nr)
+    update_sources([trajectories, segments], frame_nr)
 
 def bind_cb_obj(trigger):
     def callback(_, old, new):
@@ -154,7 +132,7 @@ update_frame('value', 1, 1)
 # ===============
 
 # Slider
-slider = Slider(start=1, end=total_frames, value=1, step=1)
+slider = Slider(start=1, end=total_frames + 10, value=1, step=1)
 slider.on_change('value_throttled', update_frame)
 
 # Buttons 
