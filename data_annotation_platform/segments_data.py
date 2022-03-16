@@ -11,11 +11,10 @@ class SegmentsData(Data):
                          (frame_nr <= self.data['frame_out'] + 400) &
                          (self.data['correct'] == True)]
 
-    # Returns new label (true/false)
-    def toggle_correct(self, id):
-        new_label = not self.data.at[id, 'correct']
-        self.data.at[id, 'correct'] = new_label
-        return new_label
+    def toggle_correct(self):
+        for id in self.selected_ids:
+            new_label = not self.data.at[id, 'correct']
+            self.data.at[id, 'correct'] = new_label
 
     def create_segment(self, t1, t2):
         segment = pd.DataFrame({
