@@ -120,7 +120,7 @@ def jump_to_handler(attr, old, new):
 def frame_button_handler(value):
     def callback():
         new = slider.value + value
-        if new > 1 and new <= slider.end:
+        if new >= 0 and new <= slider.end:
             slider.value = new
             slider.trigger('value_throttled', 0, slider.value)
     return callback
