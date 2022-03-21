@@ -1,7 +1,7 @@
 from random import random
 
 from bokeh.layouts import column, layout
-from bokeh.models import Button, Slider, ColumnDataSource, HoverTool, DataTable, TableColumn, Paragraph, NumericInput
+from bokeh.models import Button, Slider, ColumnDataSource, Paragraph, DataTable, TableColumn, PreText, NumericInput, CustomJS
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc
 from bokeh.events import Tap
@@ -29,14 +29,11 @@ def clear_trajectories(trigger):
     trigger.update_selected_data([], [])
 
 def update_stats():
-    total = segments.get_data().shape[0]
-    correct_count = segments.get_data()[segments.get_data()['correct']==True].shape[0]
-    incorrect_count = segments.get_data()[segments.get_data()['correct']==False].shape[0]
-    ratio = correct_count / total
-    return f'''Correct: {correct_count}
-    Incorrect: {incorrect_count}
-    Ratio: {ratio}
-    '''
+    return f"""
+Number of correct segments: {segments.get_correct_segment_count()}
+Number of correct segments: {segments.get_incorrect_segment_count()}
+Accuracy: {"{:.2f}".format(segments.get_correct_incorrect_ratio() * 100)}%
+    """
 
 # ===============
 # Callbacks
@@ -177,9 +174,10 @@ wrong = Button(label='Wrong')
 wrong.on_click(wrong_handler)
 
 # Stats
-stats = Paragraph(text=update_stats())
+stats = PreText(text=update_stats())
 
 # Selection table
+label = Paragraph(text='Currently selected trajectories: ')
 selection_table_cols = [TableColumn(field="traj_id", title="Trajectory id")]
 selection_table = DataTable(source=table_source, columns=selection_table_cols)
 
@@ -197,5 +195,8 @@ segments.get_source().selected.on_change('indices', bind_cb_obj(segments))
 curdoc().add_root(layout([
     [plot.plot, [slider, jump_to, [second_backward, previous_frame, next_frame, second_forward], connect, wrong]],
     [stats],
-    [selection_table, segments_table]
+    [label],
+    [selection_table,
+    # segments_table
+    ]
 ]))
