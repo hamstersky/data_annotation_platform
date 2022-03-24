@@ -16,8 +16,10 @@ class SegmentsData(Data):
                          (frame_nr <= self.data['frame_out'] + 400) &
                          (self.data['correct'] == True)]
 
-    def toggle_correct(self, comments=[]):
-        for id in self.selected_ids:
+    def toggle_correct(self, comments=[], ids=None):
+        if ids is None:
+            ids = self.selected_ids
+        for id in ids:
             is_new_segment = self.data.at[id, 'new']
             if is_new_segment:
                 self.data.drop(labels=[id], axis=0, inplace=True)
@@ -39,6 +41,9 @@ class SegmentsData(Data):
 
     def append_segment(self, segment):
         self.data = pd.concat([self.data, segment], ignore_index=True)
+
+    def get_incorrect_segments(self):
+        return self.data[self.data['correct'] == False]
 
     # Returns count of segments only created by the algorithm
     def get_total_segment_count(self):

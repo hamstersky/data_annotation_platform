@@ -29,6 +29,14 @@ Number of correct segments: {segments.get_incorrect_segment_count()}
 Accuracy: {"{:.2f}".format(segments.get_correct_incorrect_ratio() * 100)}%
     """
 
+def update_tables():
+    segments_table_source.data = segments.get_data()
+    # TODO: Find better way for keeping track of the original index
+    # At least remove the direct access to the index
+    incorrect_segments_table_source.data = segments.get_incorrect_segments()
+    incorrect_segments_table_source.data['original_index'] = segments.get_incorrect_segments().index
+
+
 # ===============
 # Callbacks
 # ===============
@@ -71,7 +79,7 @@ def connect_handler():
         # TODO: Consider the append being an internal call. Possibly still return the segment
         segment = segments.create_segment(t1, t2)
         segments.append_segment(segment)
-    segments_table_source.data = segments.get_data()
+    update_tables()
     clear_trajectories(trajectories)
     # TODO: Figure out if there's a better way to update the plot
     slider.trigger('value_throttled', 0, slider.value)
@@ -88,7 +96,7 @@ def wrong_handler():
     slider.trigger('value_throttled', 0, slider.value)
     clear_trajectories(segments)
     stats.text = update_stats()
-    segments_table_source.data = segments.get_data()
+    update_tables()
 
 def jump_to_handler(attr, old, new):
     slider.value = new
@@ -101,6 +109,16 @@ def frame_button_handler(value):
             slider.value = new
             slider.trigger('value_throttled', 0, slider.value)
     return callback
+
+def restore_connection(attr, old, new):
+    ids = [incorrect_segments_table_source.data['original_index'][new[0]]]
+    segments.toggle_correct([], ids)
+    incorrect_segments_table_source.selected._callbacks = {}
+    incorrect_segments_table_source.selected.indices = []
+    incorrect_segments_table_source.selected.on_change('indices', restore_connection)
+    update_tables()
+    slider.trigger('value_throttled', 0, slider.value)
+
 
 # ===============
 # Sources setup
@@ -170,6 +188,17 @@ selection_table = DataTable(source=table_source, columns=selection_table_cols)
 segments_table_cols = [TableColumn(field=c, title=c) for c in segments.get_data().columns]
 segments_table = DataTable(source=segments_table_source, columns=segments_table_cols)
 
+# Incorrect segments component
+incorrect_segments_table_source = ColumnDataSource(segments.get_incorrect_segments())
+incorrect_segments_table_source.selected.on_change('indices', restore_connection)
+incorrect_segments_table_cols = [TableColumn(field=c, title=c) for c in segments.get_data().columns]
+incorrect_segments_table_cols.append(TableColumn(field='original_index', title='original_index'))
+incorrect_segments_table = DataTable(source=incorrect_segments_table_source, columns=incorrect_segments_table_cols)
+incorrect_segments_component = [
+    Paragraph(text="Wrong connections. Click on a row to restore it:"),
+    incorrect_segments_table
+]
+
 # TODO: Find a good place for this 
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
@@ -182,6 +211,7 @@ curdoc().add_root(layout([
     [stats],
     [label],
     [selection_table,
-    segments_table
-    ]
+    incorrect_segments_component,
+    # segments_table,
+    ],
 ]))
