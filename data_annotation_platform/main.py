@@ -48,6 +48,8 @@ def update_frame(attr, old, new):
 
 def bind_cb_obj(trigger):
     def callback(_, old, new):
+        # Temporarily remove callback to prevent infinite triggers as the
+        # callback itself changes the value of the trigger
         trigger.get_source().selected._callbacks = {}
         tap_handler(trigger, old, new)
         trigger.get_source().selected.on_change('indices', bind_cb_obj(trigger))
@@ -55,27 +57,11 @@ def bind_cb_obj(trigger):
 
 def tap_handler(trigger, old, new):
     if len(new) > 0:
-        # The call below triggers the same callback hence the need for the lock
         trigger.update_selected_data(old, new)
         # TODO: Might not be necessary
         table_source.stream(dict(traj_id=[trigger.get_selected_trajectories()[-1]]))
     else:
         clear_trajectories(trigger)
-
-# The lock prevents infinite callbacks as the callback itself changes the value of the trigger
-# lock = False
-# def tap_handler(trigger, old, new):
-#     global lock
-#     if not lock:
-#         lock = True
-#         if len(new) > 0:
-#             # The call below triggers the same callback hence the need for the lock
-#             trigger.update_selected_data(old, new)
-#             # TODO: Might not be necessary
-#             table_source.stream(dict(traj_id=[trigger.get_selected_trajectories()[-1]]))
-#         else:
-#             clear_trajectories(trigger)
-#         lock = False
 
 def connect_handler():
     # TODO: Make a connect method that connects a list of ids
