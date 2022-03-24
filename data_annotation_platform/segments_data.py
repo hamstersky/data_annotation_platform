@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from data import Data
 
 class SegmentsData(Data):
@@ -8,20 +9,22 @@ class SegmentsData(Data):
         self.data['correct'] = True
         # For keeping track of new segments added in the annotation tool
         self.data['new'] = False
+        # self.data['comments'] = [[] for _ in range(len(self.data))]
+        self.data['comments'] = ''
 
     def get_frame_subset(self, frame_nr):
         return self.data[(frame_nr >= self.data['frame_in']) &
                          (frame_nr <= self.data['frame_out'] + 400) &
                          (self.data['correct'] == True)]
 
-    def toggle_correct(self):
+    def toggle_correct(self, comments=[]):
         for id in self.selected_ids:
             is_new_segment = self.data.at[id, 'new']
             if is_new_segment:
                 self.data.drop(labels=[id], axis=0, inplace=True)
             else:  
                 new_label = not self.data.at[id, 'correct']
-                self.data.at[id, 'correct'] = new_label
+                self.data.loc[id, ['correct', 'comments']] = np.array([new_label, comments], dtype='object')
 
     def create_segment(self, t1, t2):
         segment = pd.DataFrame({

@@ -1,5 +1,5 @@
 from bokeh.layouts import column, layout
-from bokeh.models import Button, Slider, ColumnDataSource, Paragraph, DataTable, TableColumn, PreText, NumericInput, CustomJS
+from bokeh.models import Button, Slider, ColumnDataSource, Paragraph, DataTable, TableColumn, PreText, NumericInput, CustomJS, MultiSelect
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc
 from bokeh.events import Tap
@@ -83,12 +83,12 @@ def forward_frames():
 
 def wrong_handler():
     global table_source
-    segments.toggle_correct()
+    segments.toggle_correct(incorrect_comment.value)
     # TODO: Figure out if there's a better way to update the plot
     slider.trigger('value_throttled', 0, slider.value)
     clear_trajectories(segments)
     stats.text = update_stats()
-    segments_table_source.data['correct'] = segments.get_data()['correct']     
+    segments_table_source.data = segments.get_data()
 
 def jump_to_handler(attr, old, new):
     slider.value = new
@@ -147,8 +147,16 @@ previous_frame.on_click(frame_button_handler(-1))
 connect = Button(label='Connect')
 connect.on_click(connect_handler)
 
-wrong = Button(label='Wrong')
-wrong.on_click(wrong_handler)
+# Wrong connection component
+incorrect_btn = Button(label='Incorrect segment')
+incorrect_btn.on_click(wrong_handler)
+incorrect_options = ['none of the below', 'reason1', 'reason2']
+incorrect_comment = MultiSelect(options=incorrect_options, value=[], size=3)
+incorrect_component = [
+    Paragraph(text='Reason why the connection is incorrect. You can select multiple by holding CTRL: '),
+    incorrect_comment,
+    incorrect_btn
+]
 
 # Stats
 stats = PreText(text=update_stats())
@@ -170,10 +178,10 @@ segments.get_source().selected.on_change('indices', bind_cb_obj(segments))
 
 # Create layout
 curdoc().add_root(layout([
-    [plot.plot, [slider, jump_to, [second_backward, previous_frame, next_frame, second_forward], connect, wrong]],
+    [plot.plot, [slider, jump_to, [second_backward, previous_frame, next_frame, second_forward], connect, *incorrect_component]],
     [stats],
     [label],
     [selection_table,
-    # segments_table
+    segments_table
     ]
 ]))
