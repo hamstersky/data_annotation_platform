@@ -1,5 +1,3 @@
-from random import random
-
 from bokeh.layouts import column, layout
 from bokeh.models import Button, Slider, ColumnDataSource, Paragraph, DataTable, TableColumn, PreText, NumericInput, CustomJS
 from bokeh.palettes import RdYlBu3
@@ -12,11 +10,7 @@ from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
 from helpers import get_frame_from_cap, get_image_from_frame, update_sources
 
-cap_w = 640
-cap_h = 360
-
 cap = cv2.VideoCapture('../videos/video.m4v')
-total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 trajectories = TrajectoriesData('../data/broken_trajectories.pkl')
 segments = SegmentsData('../data/segments.pkl')
 plot = TrajectoryPlot(trajectories, segments)
@@ -127,6 +121,8 @@ update_frame('value', 0, 0)
 # ===============
 
 # Slider
+# For preventing going over the last frame
+total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 slider = Slider(start=0, end=total_frames-1, value=0, step=1)
 slider.on_change('value_throttled', update_frame)
 
