@@ -108,11 +108,6 @@ def frame_button_handler(value):
             slider.trigger('value_throttled', 0, slider.value)
     return callback
 
-# def jump_to_frame(frame_nr):
-#     def callback(attr, old, new):
-#         update_frame(attr, old, new)
-
-
 # ===============
 # Sources setup
 # ===============

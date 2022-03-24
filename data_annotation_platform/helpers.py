@@ -3,14 +3,6 @@ import numpy as np
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 
-# cap_w = 640
-# cap_h = 360
-
-# cap = cv2.VideoCapture('../videos/video.m4v')
-# total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-# trajectories = TrajectoriesData('../data/broken_trajectories.pkl')
-# segments = SegmentsData('../data/segments.pkl')
-
 # ===============
 # Helpers
 # ===============
