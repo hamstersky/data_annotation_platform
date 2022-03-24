@@ -9,7 +9,6 @@ class SegmentsData(Data):
         self.data['correct'] = True
         # For keeping track of new segments added in the annotation tool
         self.data['new'] = False
-        # self.data['comments'] = [[] for _ in range(len(self.data))]
         self.data['comments'] = ''
 
     def get_frame_subset(self, frame_nr):
