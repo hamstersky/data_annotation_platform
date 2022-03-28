@@ -117,6 +117,7 @@ def restore_connection(attr, old, new):
     incorrect_segments_table_source.selected.indices = []
     incorrect_segments_table_source.selected.on_change('indices', restore_connection)
     update_tables()
+    stats.text = update_stats()
     slider.trigger('value_throttled', 0, slider.value)
 
 
@@ -143,6 +144,10 @@ update_frame('value', 0, 0)
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 slider = Slider(start=0, end=total_frames-1, value=0, step=1)
 slider.on_change('value_throttled', update_frame)
+slider_component = [
+    Paragraph(text="Use the slider to change frames:"),
+    slider
+]
 
 # Jump to frame
 jump_to = NumericInput(low=1, high=total_frames, placeholder='Jump to specific frame')
@@ -164,6 +169,10 @@ previous_frame.on_click(frame_button_handler(-1))
 
 connect = Button(label='Connect')
 connect.on_click(connect_handler)
+connect_component = [
+    Paragraph(text='Select one or more trajectories to connect them with the button below:'),
+    connect
+]
 
 # Wrong connection component
 incorrect_btn = Button(label='Incorrect segment')
@@ -171,7 +180,7 @@ incorrect_btn.on_click(wrong_handler)
 incorrect_options = ['none of the below', 'reason1', 'reason2']
 incorrect_comment = MultiSelect(options=incorrect_options, value=[], size=3)
 incorrect_component = [
-    Paragraph(text='Reason why the connection is incorrect. You can select multiple by holding CTRL: '),
+    Paragraph(text='Select an incorrect connection and optionally select the reason why the connection is incorrect. You can select multiple by holding CTRL: '),
     incorrect_comment,
     incorrect_btn
 ]
@@ -182,7 +191,7 @@ stats = PreText(text=update_stats())
 # Selection table
 label = Paragraph(text='Currently selected trajectories: ')
 selection_table_cols = [TableColumn(field="traj_id", title="Trajectory id")]
-selection_table = DataTable(source=table_source, columns=selection_table_cols)
+selection_table = DataTable(source=table_source, columns=selection_table_cols, width=300)
 
 # Segments table
 segments_table_cols = [TableColumn(field=c, title=c) for c in segments.get_data().columns]
@@ -191,9 +200,9 @@ segments_table = DataTable(source=segments_table_source, columns=segments_table_
 # Incorrect segments component
 incorrect_segments_table_source = ColumnDataSource(segments.get_incorrect_segments())
 incorrect_segments_table_source.selected.on_change('indices', restore_connection)
-incorrect_segments_table_cols = [TableColumn(field=c, title=c) for c in segments.get_data().columns]
-incorrect_segments_table_cols.append(TableColumn(field='original_index', title='original_index'))
-incorrect_segments_table = DataTable(source=incorrect_segments_table_source, columns=incorrect_segments_table_cols)
+incorrect_segments_table_cols = ['xs', 'ys', 'class', 'frame_in', 'frame_out', 'comments']
+incorrect_segments_table_cols = [TableColumn(field=c, title=c) for c in incorrect_segments_table_cols]
+incorrect_segments_table = DataTable(source=incorrect_segments_table_source, columns=incorrect_segments_table_cols, width=500)
 incorrect_segments_component = [
     Paragraph(text="Wrong connections. Click on a row to restore it:"),
     incorrect_segments_table
@@ -207,8 +216,8 @@ segments.get_source().selected.on_change('indices', bind_cb_obj(segments))
 
 # Create layout
 curdoc().add_root(layout([
-    [plot.plot, [slider, jump_to, [second_backward, previous_frame, next_frame, second_forward], connect, *incorrect_component]],
-    [stats],
+    [plot.plot, [*slider_component, jump_to, [second_backward, previous_frame, next_frame, second_forward], stats]],
+    [connect_component, incorrect_component],
     [label],
     [selection_table,
     incorrect_segments_component,
