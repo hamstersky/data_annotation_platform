@@ -25,7 +25,7 @@ class Data():
             **subset.to_dict(orient='list'),
             'id': subset.index.values,
             'line_color': line_colors,
-    }
+        }
 
     def get_data(self):
         return self.data
@@ -38,6 +38,9 @@ class Data():
 
     def get_selected_trajectories(self):
         return self.selected_ids
+
+    def get_id_of_selected_trajectory(self, selected_index):
+        return self.source.data['id'][selected_index]
 
     def update_selected_data(self, old, new):
         if new == []:

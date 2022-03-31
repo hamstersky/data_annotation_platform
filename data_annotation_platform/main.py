@@ -59,11 +59,20 @@ def bind_cb_obj(trigger):
 
 def tap_handler(trigger, old, new):
     if len(new) > 0:
-        trigger.update_selected_data(old, new)
-        # TODO: Might not be necessary
-        table_source.stream(dict(traj_id=[trigger.get_selected_trajectories()[-1]]))
+        selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
+        if isinstance(trigger, TrajectoriesData) and not trigger.get_selected_trajectories():
+            trigger.get_candidates_of(selected_traj_id)
+            # Needed so that the first trajectory remains the selected one
+            trigger.update_selected_data(old, [0])
+        else:
+            trigger.update_selected_data(old, new)
+        table_source.stream(dict(traj_id=[selected_traj_id]))
     else:
         clear_trajectories(trigger)
+        # TODO: Other way to get the slider value? Maybe consider the current
+        # frame to be some global variable or instance variable of plot class or
+        # some other new class?
+        update_sources([trajectories], slider.value)
 
 def connect_handler():
     # TODO: Make a connect method that connects a list of ids
@@ -72,6 +81,7 @@ def connect_handler():
     # Connections will be done in the order of the supplied ids
     ids = trajectories.get_selected_trajectories()
     pairs = [tuple(map(int, x)) for x in zip(ids, ids[1:])]
+    new_frame = 0
     for t1_ID, t2_ID in pairs:
         # TODO: Replace the iloc call
         t1 = trajectories.get_trajectory_by_id(t1_ID)
@@ -79,10 +89,12 @@ def connect_handler():
         # TODO: Consider the append being an internal call. Possibly still return the segment
         segment = segments.create_segment(t1, t2)
         segments.append_segment(segment)
+        new_frame = segment['frame_out']
     update_tables()
     clear_trajectories(trajectories)
     # TODO: Figure out if there's a better way to update the plot
-    slider.trigger('value_throttled', 0, slider.value)
+    # Jump to the frame_out value of the added segment
+    slider.trigger('value_throttled', 0, int(new_frame))
 
 def forward_frames():
     old = slider.value
