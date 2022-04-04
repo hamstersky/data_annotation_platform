@@ -20,6 +20,7 @@ plot = TrajectoryPlot(trajectories, segments)
 # ===============
 def clear_trajectories(trigger):
     table_source.data['traj_id'] = []
+    candidates_table_source.data = {}
     trigger.update_selected_data([], [])
 
 def update_stats():
@@ -61,9 +62,13 @@ def tap_handler(trigger, old, new):
     if len(new) > 0:
         selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
         if isinstance(trigger, TrajectoriesData) and not trigger.get_selected_trajectories():
-            trigger.get_candidates_of(selected_traj_id)
+            trigger.update_source_candidates(selected_traj_id)
             # Needed so that the first trajectory remains the selected one
             trigger.update_selected_data(old, [0])
+            candidates = trajectories.get_candidates(selected_traj_id)
+            candidates_table_source.data = candidates
+            candidates_table_source.data['ID'] = candidates.index.values
+
         else:
             trigger.update_selected_data(old, new)
         table_source.stream(dict(traj_id=[selected_traj_id]))
@@ -220,6 +225,18 @@ incorrect_segments_component = [
     incorrect_segments_table
 ]
 
+# Candidates table
+candidates_table_source = ColumnDataSource()
+candidates_table_source.selected.on_change('indices', bind_cb_obj(trajectories))
+# TODO: Add euclidean distance
+candidates_table_cols = ['ID', 'class', 'frame_in', 'frame_out']
+candidates_table_cols = [TableColumn(field=c, title=c) for c in candidates_table_cols]
+candidates_table = DataTable(source=candidates_table_source, columns=candidates_table_cols, width=500, index_position=None)
+candidates_component = [
+    Paragraph(text="Candidate trajectories. The first trajectory in the table is the selected trajectory:"),
+    candidates_table
+]
+
 # TODO: Find a good place for this 
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
@@ -235,4 +252,5 @@ curdoc().add_root(layout([
     incorrect_segments_component,
     # segments_table,
     ],
+    *candidates_component
 ]))
