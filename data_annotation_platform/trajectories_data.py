@@ -9,6 +9,7 @@ class TrajectoriesData(Data):
         return self.data[(frame_nr >= self.data['frame_in']) &
                          (frame_nr <= self.data['frame_out'] + 400)]
 
+    # TODO: Is this method needed?
     def get_candidates(self, traj_id):
         t1 = self.data.iloc[traj_id]
         # TODO: What about other classes?

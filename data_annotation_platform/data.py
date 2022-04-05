@@ -43,6 +43,8 @@ class Data():
         return self.source.data['id'][selected_index]
 
     def update_selected_data(self, old, new):
+        print('old: ', old)
+        print('new: ', new)
         if new == []:
             self.selected_ids = []
             self.source.selected.indices = []

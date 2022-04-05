@@ -20,7 +20,6 @@ plot = TrajectoryPlot(trajectories, segments)
 # ===============
 def clear_trajectories(trigger):
     table_source.data['traj_id'] = []
-    candidates_table_source.data = {}
     trigger.update_selected_data([], [])
 
 def update_stats():
@@ -65,10 +64,6 @@ def tap_handler(trigger, old, new):
             trigger.update_source_candidates(selected_traj_id)
             # Needed so that the first trajectory remains the selected one
             trigger.update_selected_data(old, [0])
-            candidates = trajectories.get_candidates(selected_traj_id)
-            candidates_table_source.data = candidates
-            candidates_table_source.data['ID'] = candidates.index.values
-
         else:
             trigger.update_selected_data(old, new)
         table_source.stream(dict(traj_id=[selected_traj_id]))
@@ -77,6 +72,7 @@ def tap_handler(trigger, old, new):
         # TODO: Other way to get the slider value? Maybe consider the current
         # frame to be some global variable or instance variable of plot class or
         # some other new class?
+        # Restores state without candidate trajectories
         update_sources([trajectories], slider.value)
 
 def connect_handler():
@@ -226,15 +222,13 @@ incorrect_segments_component = [
 ]
 
 # Candidates table
-candidates_table_source = ColumnDataSource()
-candidates_table_source.selected.on_change('indices', bind_cb_obj(trajectories))
 # TODO: Add euclidean distance
-candidates_table_cols = ['ID', 'class', 'frame_in', 'frame_out']
-candidates_table_cols = [TableColumn(field=c, title=c) for c in candidates_table_cols]
-candidates_table = DataTable(source=candidates_table_source, columns=candidates_table_cols, width=500, index_position=None)
-candidates_component = [
-    Paragraph(text="Candidate trajectories. The first trajectory in the table is the selected trajectory:"),
-    candidates_table
+trajectories_table_cols = ['id', 'class', 'frame_in', 'frame_out']
+trajectories_table_cols = [TableColumn(field=c, title=c) for c in trajectories_table_cols]
+trajectories_table = DataTable(source=trajectories.get_source(), columns=trajectories_table_cols, width=500, index_position=None)
+trajectories_component = [
+    Paragraph(text="Trajectories/candidates on current frame. Click a trajectory to select it:"),
+    trajectories_table
 ]
 
 # TODO: Find a good place for this 
@@ -252,5 +246,5 @@ curdoc().add_root(layout([
     incorrect_segments_component,
     # segments_table,
     ],
-    *candidates_component
+    *trajectories_component
 ]))
