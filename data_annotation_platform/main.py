@@ -25,7 +25,7 @@ def clear_trajectories(trigger):
 def update_stats():
     return f"""
 Number of correct segments: {segments.get_correct_segment_count()}
-Number of correct segments: {segments.get_incorrect_segment_count()}
+Number of incorrect segments: {segments.get_incorrect_segment_count()}
 Accuracy: {"{:.2f}".format(segments.get_correct_incorrect_ratio() * 100)}%
     """
 
