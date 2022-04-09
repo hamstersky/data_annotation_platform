@@ -9,6 +9,8 @@ class Data():
         self.data.reset_index(inplace=True)
         # Extract only relevant features
         self.data = self.data[['xs', 'ys', 'class', 'frame_in', 'frame_out']]
+        self.data.index.name = 'ID'
+        # print(self.data.head(5))
         self.source = ColumnDataSource()
         self.selected_ids = []
 
@@ -43,8 +45,6 @@ class Data():
         return self.source.data['id'][selected_index]
 
     def update_selected_data(self, old, new):
-        print('old: ', old)
-        print('new: ', new)
         if new == []:
             self.selected_ids = []
             self.source.selected.indices = []

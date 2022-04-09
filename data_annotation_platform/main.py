@@ -35,7 +35,7 @@ def update_tables():
     # At least remove the direct access to the index
     incorrect_segments_table_source.data = segments.get_incorrect_segments()
     incorrect_segments_table_source.data['original_index'] = segments.get_incorrect_segments().index
-
+    new_segments_table_source.data = segments.get_new_segments()
 
 # ===============
 # Callbacks
@@ -132,6 +132,13 @@ def restore_connection(attr, old, new):
     update_tables()
     stats.text = update_stats()
     slider.trigger('value_throttled', 0, slider.value)
+
+def table_click_handler(table):
+    def callback(_, old, new):
+        frame = table.source.data['frame_in'][new[0]]
+        slider.value = frame
+        slider.trigger('value_throttled', 0, slider.value)
+    return callback
 
 
 # ===============
@@ -231,6 +238,18 @@ trajectories_component = [
     trajectories_table
 ]
 
+# New segments table
+# TODO: Duplication: Extracting columns is done many times in the same way
+new_segments_table_source = ColumnDataSource(segments.get_new_segments())
+new_segments_table_cols = ['ID', 'class', 'frame_in', 'frame_out']
+new_segments_table_cols = [TableColumn(field=c, title=c) for c in new_segments_table_cols]
+new_segments_table = DataTable(source=new_segments_table_source, columns=new_segments_table_cols, width=500, index_position=None)
+new_segments_table_source.selected.on_change('indices', table_click_handler(new_segments_table))
+new_segments_component = [
+    Paragraph(text="Manually created segments:"),
+    new_segments_table
+]
+
 # TODO: Find a good place for this 
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
@@ -246,5 +265,6 @@ curdoc().add_root(layout([
     incorrect_segments_component,
     # segments_table,
     ],
-    *trajectories_component
+    *trajectories_component,
+    *new_segments_component
 ]))

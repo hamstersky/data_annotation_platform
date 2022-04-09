@@ -10,6 +10,7 @@ class SegmentsData(Data):
         # For keeping track of new segments added in the annotation tool
         self.data['new'] = False
         self.data['comments'] = ''
+        print(self.data.head(1))
 
     def get_frame_subset(self, frame_nr):
         return self.data[(frame_nr >= self.data['frame_in']) &
@@ -35,12 +36,15 @@ class SegmentsData(Data):
             'ys': [[t1['ys'][-1], t2['ys'][0]]],
             'frame_in': t1['frame_out'],
             'frame_out': t2['frame_in'],
-            'correct': True
+            'correct': True,
+            'new': True
         })
         return segment
 
     def append_segment(self, segment):
         self.data = pd.concat([self.data, segment], ignore_index=True)
+        self.data.index.name = 'ID'
+        print(self.data.head)
 
     def get_incorrect_segments(self):
         return self.data[self.data['correct'] == False]
@@ -57,3 +61,6 @@ class SegmentsData(Data):
 
     def get_correct_incorrect_ratio(self):
         return self.get_correct_segment_count() / self.get_total_segment_count()
+
+    def get_new_segments(self):
+        return self.data[self.data['new'] == True]
