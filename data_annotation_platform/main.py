@@ -1,5 +1,5 @@
 from bokeh.layouts import column, layout
-from bokeh.models import Button, Slider, ColumnDataSource, Paragraph, DataTable, TableColumn, PreText, NumericInput, CustomJS, MultiSelect
+from bokeh.models import Button, Slider, ColumnDataSource, Paragraph, DataTable, TableColumn, PreText, NumericInput, CustomJS, MultiSelect, Panel, Tabs
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure, curdoc
 from bokeh.events import Tap
@@ -207,9 +207,9 @@ incorrect_component = [
 stats = PreText(text=update_stats())
 
 # Selection table
-label = Paragraph(text='Currently selected trajectories: ')
-selection_table_cols = [TableColumn(field="traj_id", title="Trajectory id")]
-selection_table = DataTable(source=table_source, columns=selection_table_cols, width=300)
+selection_table = DataTable(source=table_source,
+                            columns=[TableColumn(field="traj_id", title="id")],
+                            width=300)
 
 # Columns for all tables
 columns = [TableColumn(field=c, title=c) for c in ['id', 'frame_in', 'frame_out', 'class']]
@@ -225,10 +225,6 @@ incorrect_segments_table = DataTable(source=incorrect_segments_table_source,
                                      columns=[*columns, TableColumn(field='comments', title='comments')],
                                      width=500,
                                      index_position=None)
-incorrect_segments_component = [
-    Paragraph(text="Wrong connections. Click on a row to restore it:"),
-    incorrect_segments_table
-]
 
 # Candidates table
 # TODO: Add euclidean distance
@@ -236,10 +232,6 @@ trajectories_table = DataTable(source=trajectories.get_source(),
                                columns=columns,
                                width=500,
                                index_position=None)
-trajectories_component = [
-    Paragraph(text="Trajectories/candidates on current frame. Click a trajectory to select it:"),
-    trajectories_table
-]
 
 # New segments table
 new_segments_table_source = ColumnDataSource(segments.get_new_segments())
@@ -248,10 +240,24 @@ new_segments_table = DataTable(source=new_segments_table_source,
                                width=500,
                                index_position=None)
 new_segments_table_source.selected.on_change('indices', table_click_handler(new_segments_table))
-new_segments_component = [
-    Paragraph(text="Manually created segments:"),
-    new_segments_table
-]
+
+def update_description(attr, old, new):
+    tab_description.text = descriptions[tabs.tabs[new].name]
+
+descriptions = {
+    'trajectories': 'Trajectories/candidates on current frame. Click a trajectory to select it:',
+    'wrong_segments': 'Wrong segments. Click on a row to restore it:',
+    'new_segments': 'Manually created segments:',
+    'current_selection': 'Currently selected trajectories:'
+}
+trajectories_tab = Panel(child=trajectories_table, title='Current frame', name='trajectories')
+wrong_segments_tab = Panel(child=incorrect_segments_table, title='Wrong segments', name='wrong_segments')
+new_segments_tab = Panel(child=new_segments_table, title='New connections', name='new_segments')
+selection_tab = Panel(child=selection_table, title='Current selection', name='current_selection')
+stats_tab = Panel(child=stats, title='Statistics', name='stats')
+tab_description = Paragraph(text=descriptions['trajectories'])
+tabs = Tabs(tabs=[trajectories_tab, wrong_segments_tab, new_segments_tab, selection_tab, stats_tab])
+tabs.on_change('active', update_description)
 
 # TODO: Find a good place for this 
 # Selection callbacks
@@ -265,13 +271,9 @@ update_frame('value', 0, 0)
 
 # Create layout
 curdoc().add_root(layout([
-    [plot.plot, [*slider_component, jump_to, [second_backward, previous_frame, next_frame, second_forward], stats]],
+    [plot.plot, [tab_description, tabs]],
+    *slider_component,
+    [jump_to],
+    [second_backward, previous_frame, next_frame, second_forward],
     [connect_component, incorrect_component],
-    [label],
-    [selection_table,
-    incorrect_segments_component,
-    # segments_table,
-    ],
-    *trajectories_component,
-    *new_segments_component
 ]))
