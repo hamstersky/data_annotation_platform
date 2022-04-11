@@ -47,6 +47,7 @@ def update_frame(attr, old, new):
     img = get_image_from_frame(frame)
     plot.update_img(img)
     update_sources([trajectories, segments], frame_nr)
+    # print(trajectories.get_source().data)
 
 def bind_cb_obj(trigger):
     def callback(_, old, new):
@@ -152,9 +153,6 @@ def setup_sources():
 
 table_source, segments_table_source = setup_sources()
 
-# Setup initial frame
-update_frame('value', 0, 0)
-
 # ===============
 # Widgets / Layout
 # ===============
@@ -213,6 +211,9 @@ label = Paragraph(text='Currently selected trajectories: ')
 selection_table_cols = [TableColumn(field="traj_id", title="Trajectory id")]
 selection_table = DataTable(source=table_source, columns=selection_table_cols, width=300)
 
+# Columns for all tables
+columns = [TableColumn(field=c, title=c) for c in ['id', 'frame_in', 'frame_out', 'class']]
+
 # Segments table
 segments_table_cols = [TableColumn(field=c, title=c) for c in segments.get_data().columns]
 segments_table = DataTable(source=segments_table_source, columns=segments_table_cols)
@@ -220,9 +221,10 @@ segments_table = DataTable(source=segments_table_source, columns=segments_table_
 # Incorrect segments component
 incorrect_segments_table_source = ColumnDataSource(segments.get_incorrect_segments())
 incorrect_segments_table_source.selected.on_change('indices', restore_connection)
-incorrect_segments_table_cols = ['xs', 'ys', 'class', 'frame_in', 'frame_out', 'comments']
-incorrect_segments_table_cols = [TableColumn(field=c, title=c) for c in incorrect_segments_table_cols]
-incorrect_segments_table = DataTable(source=incorrect_segments_table_source, columns=incorrect_segments_table_cols, width=500)
+incorrect_segments_table = DataTable(source=incorrect_segments_table_source,
+                                     columns=[*columns, TableColumn(field='comments', title='comments')],
+                                     width=500,
+                                     index_position=None)
 incorrect_segments_component = [
     Paragraph(text="Wrong connections. Click on a row to restore it:"),
     incorrect_segments_table
@@ -230,20 +232,21 @@ incorrect_segments_component = [
 
 # Candidates table
 # TODO: Add euclidean distance
-trajectories_table_cols = ['id', 'class', 'frame_in', 'frame_out']
-trajectories_table_cols = [TableColumn(field=c, title=c) for c in trajectories_table_cols]
-trajectories_table = DataTable(source=trajectories.get_source(), columns=trajectories_table_cols, width=500, index_position=None)
+trajectories_table = DataTable(source=trajectories.get_source(),
+                               columns=columns,
+                               width=500,
+                               index_position=None)
 trajectories_component = [
     Paragraph(text="Trajectories/candidates on current frame. Click a trajectory to select it:"),
     trajectories_table
 ]
 
 # New segments table
-# TODO: Duplication: Extracting columns is done many times in the same way
 new_segments_table_source = ColumnDataSource(segments.get_new_segments())
-new_segments_table_cols = ['ID', 'class', 'frame_in', 'frame_out']
-new_segments_table_cols = [TableColumn(field=c, title=c) for c in new_segments_table_cols]
-new_segments_table = DataTable(source=new_segments_table_source, columns=new_segments_table_cols, width=500, index_position=None)
+new_segments_table = DataTable(source=new_segments_table_source,
+                               columns=columns,
+                               width=500,
+                               index_position=None)
 new_segments_table_source.selected.on_change('indices', table_click_handler(new_segments_table))
 new_segments_component = [
     Paragraph(text="Manually created segments:"),
@@ -255,6 +258,10 @@ new_segments_component = [
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
 trajectories.get_source().selected.on_change('indices', bind_cb_obj(trajectories))
 segments.get_source().selected.on_change('indices', bind_cb_obj(segments))
+
+
+# Setup initial frame
+update_frame('value', 0, 0)
 
 # Create layout
 curdoc().add_root(layout([

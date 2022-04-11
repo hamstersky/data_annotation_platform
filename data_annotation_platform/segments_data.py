@@ -10,7 +10,6 @@ class SegmentsData(Data):
         # For keeping track of new segments added in the annotation tool
         self.data['new'] = False
         self.data['comments'] = ''
-        print(self.data.head(1))
 
     def get_frame_subset(self, frame_nr):
         return self.data[(frame_nr >= self.data['frame_in']) &
@@ -43,8 +42,7 @@ class SegmentsData(Data):
 
     def append_segment(self, segment):
         self.data = pd.concat([self.data, segment], ignore_index=True)
-        self.data.index.name = 'ID'
-        print(self.data.head)
+        self.data.index.name = 'id'
 
     def get_incorrect_segments(self):
         return self.data[self.data['correct'] == False]
