@@ -186,6 +186,11 @@ def table_click_handler(table):
     return callback
 
 
+def tab_switch(attr, old, new):
+    restore_btn.visible = tabs.tabs[new].name == "wrong_segments"
+    tab_description.text = descriptions[tabs.tabs[new].name]
+
+
 # ===============
 # Sources setup
 # ===============
@@ -245,6 +250,10 @@ connect_component = [
     connect,
 ]
 
+# Restore segment button
+restore_btn = Button(label="Restore segment", visible=False)
+restore_btn.on_click(restore_connection)
+
 # Wrong connection component
 incorrect_btn = Button(label="Incorrect segment")
 incorrect_btn.on_click(wrong_handler)
@@ -258,9 +267,6 @@ incorrect_component = [
     incorrect_btn,
 ]
 
-restore_btn = Button(label="Restore segment")
-restore_btn.on_click(restore_connection)
-
 # Stats
 stats = PreText(text=update_stats())
 
@@ -269,10 +275,16 @@ selection_table = DataTable(
     source=table_source, columns=[TableColumn(field="traj_id", title="id")], width=300
 )
 
-# Columns for all tables
+# Settings for all tables
 columns = [
     TableColumn(field=c, title=c) for c in ["id", "frame_in", "frame_out", "class"]
 ]
+table_params = {
+    "columns": columns,
+    "index_position": None,
+    "height": 250,
+    "width": 550,
+}
 
 # Segments table
 segments_table_cols = [
@@ -284,9 +296,8 @@ segments_table = DataTable(source=segments_table_source, columns=segments_table_
 incorrect_segments_table_source = ColumnDataSource(segments.get_incorrect_segments())
 incorrect_segments_table = DataTable(
     source=incorrect_segments_table_source,
+    **{key: table_params[key] for key in table_params if key != "columns"},
     columns=[*columns, TableColumn(field="comments", title="comments")],
-    width=500,
-    index_position=None,
 )
 incorrect_segments_table_source.selected.on_change(
     "indices", table_click_handler(incorrect_segments_table)
@@ -294,9 +305,7 @@ incorrect_segments_table_source.selected.on_change(
 
 # Candidates table
 # TODO: Add euclidean distance
-trajectories_table = DataTable(
-    source=trajectories.get_source(), columns=columns, width=500, index_position=None
-)
+trajectories_table = DataTable(source=trajectories.get_source(), **table_params)
 
 # New segments table
 new_segments_table_source = ColumnDataSource(segments.get_new_segments())
@@ -306,11 +315,6 @@ new_segments_table = DataTable(
 new_segments_table_source.selected.on_change(
     "indices", table_click_handler(new_segments_table)
 )
-
-
-def update_description(attr, old, new):
-    tab_description.text = descriptions[tabs.tabs[new].name]
-
 
 descriptions = {
     "trajectories": "Trajectories/candidates on current frame. Click a trajectory to select it:",
@@ -339,9 +343,10 @@ tabs = Tabs(
         new_segments_tab,
         selection_tab,
         stats_tab,
-    ]
+    ],
+    height=280,
 )
-tabs.on_change("active", update_description)
+tabs.on_change("active", tab_switch)
 
 # TODO: Find a good place for this
 # Selection callbacks
@@ -357,12 +362,11 @@ update_frame("value", 0, 0)
 curdoc().add_root(
     layout(
         [
-            [plot.plot, [tab_description, tabs]],
+            [plot.plot, [tab_description, tabs, restore_btn]],
             *slider_component,
             [jump_to],
             [second_backward, previous_frame, next_frame, second_forward],
             [connect_component, incorrect_component],
-            [restore_btn],
         ]
     )
 )
