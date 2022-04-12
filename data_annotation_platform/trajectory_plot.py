@@ -28,7 +28,8 @@ class TrajectoryPlot:
 
     def configure_plot(self):
         p = figure(
-            tools="pan,box_zoom,wheel_zoom,tap,save,reset",
+            tools="pan,wheel_zoom,tap,reset",
+            toolbar_location="below",
             active_scroll="wheel_zoom",
             active_tap="auto",
             x_range=(0, self.cap_w),
