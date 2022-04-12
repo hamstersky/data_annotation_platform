@@ -12,7 +12,6 @@ class Data:
         # Extract only relevant features
         self.data = self.data[["xs", "ys", "class", "frame_in", "frame_out"]]
         self.data.index.name = "id"
-        # print(self.data.head(5))
         self.source = ColumnDataSource()
         self.selected_ids = []
 
@@ -22,8 +21,6 @@ class Data:
     def update_data_source(self, frame_nr):
         # TODO: Extract this as a global?
         subset = self.get_frame_subset(frame_nr)
-        print(type(self), ": ")
-        # print(subset.head(1))
         colors = [
             "red",
             "magenta",
