@@ -124,24 +124,28 @@ def frame_button_handler(value):
             slider.trigger('value_throttled', 0, slider.value)
     return callback
 
-def restore_connection(attr, old, new):
-    ids = [incorrect_segments_table_source.data['original_index'][new[0]]]
+def restore_connection():
+    # ids = [incorrect_segments_table_source.data['original_index'][new[0]]]
+    indices = incorrect_segments_table.source.selected.indices
+    ids = []
+    for i in indices:
+        ids.append(incorrect_segments_table.source.data['id'][i])
     segments.toggle_correct([], ids)
     incorrect_segments_table_source.selected._callbacks = {}
     incorrect_segments_table_source.selected.indices = []
-    incorrect_segments_table_source.selected.on_change('indices', restore_connection)
+    incorrect_segments_table_source.selected.on_change('indices', table_click_handler(incorrect_segments_table))
     update_tables()
     stats.text = update_stats()
     slider.trigger('value_throttled', 0, slider.value)
 
 def table_click_handler(table):
     def callback(_, old, new):
-        table.source.selected._callbacks = {}
+        # table.source.selected._callbacks = {}
         frame = table.source.data['frame_in'][new[0]]
         slider.value = frame
         slider.trigger('value_throttled', 0, slider.value)
-        table.source.selected.indices = []
-        table.source.selected.on_change('indices', table_click_handler(table))
+        # table.source.selected.indices = []
+        # table.source.selected.on_change('indices', table_click_handler(table))
     return callback
 
 
@@ -205,6 +209,9 @@ incorrect_component = [
     incorrect_comment,
     incorrect_btn
 ]
+
+restore_btn = Button(label='Restore segment')
+restore_btn.on_click(restore_connection)
 
 # Stats
 stats = PreText(text=update_stats())
@@ -279,4 +286,5 @@ curdoc().add_root(layout([
     [jump_to],
     [second_backward, previous_frame, next_frame, second_forward],
     [connect_component, incorrect_component],
+    [restore_btn],
 ]))
