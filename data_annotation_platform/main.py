@@ -136,9 +136,12 @@ def restore_connection(attr, old, new):
 
 def table_click_handler(table):
     def callback(_, old, new):
+        table.source.selected._callbacks = {}
         frame = table.source.data['frame_in'][new[0]]
         slider.value = frame
         slider.trigger('value_throttled', 0, slider.value)
+        table.source.selected.indices = []
+        table.source.selected.on_change('indices', table_click_handler(table))
     return callback
 
 
@@ -220,11 +223,11 @@ segments_table = DataTable(source=segments_table_source, columns=segments_table_
 
 # Incorrect segments component
 incorrect_segments_table_source = ColumnDataSource(segments.get_incorrect_segments())
-incorrect_segments_table_source.selected.on_change('indices', restore_connection)
 incorrect_segments_table = DataTable(source=incorrect_segments_table_source,
                                      columns=[*columns, TableColumn(field='comments', title='comments')],
                                      width=500,
                                      index_position=None)
+incorrect_segments_table_source.selected.on_change('indices', table_click_handler(incorrect_segments_table))
 
 # Candidates table
 # TODO: Add euclidean distance
@@ -246,7 +249,7 @@ def update_description(attr, old, new):
 
 descriptions = {
     'trajectories': 'Trajectories/candidates on current frame. Click a trajectory to select it:',
-    'wrong_segments': 'Wrong segments. Click on a row to restore it:',
+    'wrong_segments': 'Wrong segments:',
     'new_segments': 'Manually created segments:',
     'current_selection': 'Currently selected trajectories:'
 }
