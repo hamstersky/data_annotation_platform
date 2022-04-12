@@ -7,10 +7,12 @@ from trajectories_data import TrajectoriesData
 # Helpers
 # ===============
 
+
 def get_frame_from_cap(cap, frame_nr):
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_nr)
     _, frame = cap.read()
     return frame
+
 
 def get_image_from_frame(frame):
     img = frame[::-1, :, ::-1]
@@ -24,6 +26,7 @@ def get_image_from_frame(frame):
     img_alpha[:, :, :3] = img
     img_view[:, :, :] = img_alpha
     return img_orig
+
 
 def update_sources(sources, frame_nr):
     for source in sources:
