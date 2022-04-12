@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from bokeh.events import Tap
-from bokeh.layouts import column, layout
+from bokeh.layouts import column, layout, row
 from bokeh.models import (
     Button,
     ColumnDataSource,
@@ -28,6 +28,8 @@ cap = cv2.VideoCapture("../videos/video.m4v")
 trajectories = TrajectoriesData("../data/broken_trajectories.pkl")
 segments = SegmentsData("../data/segments.pkl")
 plot = TrajectoryPlot(trajectories, segments)
+capture_width = int(cap.get(3))
+current_minute = 0
 
 # ===============
 # Helpers
@@ -67,7 +69,6 @@ def update_frame(attr, old, new):
     img = get_image_from_frame(frame)
     plot.update_img(img)
     update_sources([trajectories, segments], frame_nr)
-    # print(trajectories.get_source().data)
 
 
 def bind_cb_obj(trigger):
@@ -211,12 +212,14 @@ table_source, segments_table_source = setup_sources()
 # Slider
 # For preventing going over the last frame
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-slider = Slider(start=0, end=total_frames - 1, value=0, step=1)
-slider.on_change("value_throttled", update_frame)
+slider = Slider(start=0, end=1800, value=0, step=1, width=capture_width)
+slider.on_change("value", update_frame)
 slider_component = [Paragraph(text="Use the slider to change frames:"), slider]
 
 # Jump to frame
-jump_to = NumericInput(low=1, high=total_frames, placeholder="Jump to specific frame")
+jump_to = NumericInput(
+    low=1, high=total_frames, placeholder="Jump to specific frame", width=capture_width
+)
 jump_to.on_change("value", jump_to_handler)
 
 # Buttons
@@ -364,7 +367,7 @@ curdoc().add_root(
         [
             [plot.plot, [tab_description, tabs, restore_btn]],
             *slider_component,
-            [jump_to],
+            jump_to,
             [second_backward, previous_frame, next_frame, second_forward],
             [connect_component, incorrect_component],
         ]
