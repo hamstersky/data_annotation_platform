@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 import pandas as pd
 from bokeh.models import ColumnDataSource
 

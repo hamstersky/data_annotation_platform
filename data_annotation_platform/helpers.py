@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 

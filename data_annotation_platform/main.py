@@ -1,27 +1,28 @@
+import cv2
+import numpy as np
+from bokeh.events import Tap
 from bokeh.layouts import column, layout
 from bokeh.models import (
     Button,
-    Slider,
     ColumnDataSource,
-    Paragraph,
-    DataTable,
-    TableColumn,
-    PreText,
-    NumericInput,
     CustomJS,
+    DataTable,
     MultiSelect,
+    NumericInput,
     Panel,
+    Paragraph,
+    PreText,
+    Slider,
+    TableColumn,
     Tabs,
 )
 from bokeh.palettes import RdYlBu3
-from bokeh.plotting import figure, curdoc
-from bokeh.events import Tap
-import cv2
-import numpy as np
+from bokeh.plotting import curdoc, figure
+
+from helpers import get_frame_from_cap, get_image_from_frame, update_sources
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
-from helpers import get_frame_from_cap, get_image_from_frame, update_sources
 
 cap = cv2.VideoCapture("../videos/video.m4v")
 trajectories = TrajectoriesData("../data/broken_trajectories.pkl")
