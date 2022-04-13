@@ -1,3 +1,4 @@
+from pickle import FRAME
 import cv2
 import numpy as np
 from bokeh.events import Tap
@@ -29,7 +30,9 @@ trajectories = TrajectoriesData("../data/broken_trajectories.pkl")
 segments = SegmentsData("../data/segments.pkl")
 plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))
+total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 current_minute = 0
+FRAME_INTERVAL = 1800
 
 # ===============
 # Helpers
@@ -58,13 +61,31 @@ def update_tables():
     new_segments_table_source.data = segments.get_new_segments()
 
 
+def update_slider_limits():
+    slider.start = current_minute * FRAME_INTERVAL - 1
+    slider.end = (current_minute + 1) * FRAME_INTERVAL + 1
+
+
+def update_slider(frame_nr):
+    if frame_nr > 0 and frame_nr < total_frames:
+        global current_minute
+        if frame_nr > slider.end - 1:
+            current_minute += 1
+            update_slider_limits()
+            slider.value = slider.start + 1
+        elif frame_nr < slider.start + 1:
+            current_minute -= 1
+            update_slider_limits()
+            slider.value = slider.end - 1
+
+
 # ===============
 # Callbacks
 # ===============
 
 
-def update_frame(attr, old, new):
-    frame_nr = new
+def update_frame(attr, old, frame_nr):
+    update_slider(frame_nr)
     frame = get_frame_from_cap(cap, frame_nr)
     img = get_image_from_frame(frame)
     plot.update_img(img)
@@ -124,28 +145,31 @@ def connect_handler():
     clear_trajectories(trajectories)
     # TODO: Figure out if there's a better way to update the plot
     # Jump to the frame_out value of the added segment
-    slider.trigger("value_throttled", 0, int(new_frame))
+    slider.trigger("value", 0, int(new_frame))
 
 
 def forward_frames():
     old = slider.value
     slider.value += 30
-    slider.trigger("value_throttled", old, slider.value)
+    slider.trigger("value", old, slider.value)
 
 
 def wrong_handler():
     global table_source
     segments.toggle_correct(incorrect_comment.value)
     # TODO: Figure out if there's a better way to update the plot
-    slider.trigger("value_throttled", 0, slider.value)
+    slider.trigger("value", 0, slider.value)
     clear_trajectories(segments)
     stats.text = update_stats()
     update_tables()
 
 
 def jump_to_handler(attr, old, new):
+    global current_minute
+    current_minute = new // 30 // 60
+    update_slider_limits()
     slider.value = new
-    slider.trigger("value_throttled", 0, new)
+    slider.trigger("value", 0, new)
 
 
 def frame_button_handler(value):
@@ -153,7 +177,7 @@ def frame_button_handler(value):
         new = slider.value + value
         if new >= 0 and new <= slider.end:
             slider.value = new
-            slider.trigger("value_throttled", 0, slider.value)
+            slider.trigger("value", 0, slider.value)
 
     return callback
 
@@ -172,7 +196,7 @@ def restore_connection():
     )
     update_tables()
     stats.text = update_stats()
-    slider.trigger("value_throttled", 0, slider.value)
+    slider.trigger("value", 0, slider.value)
 
 
 def table_click_handler(table):
@@ -180,7 +204,7 @@ def table_click_handler(table):
         # table.source.selected._callbacks = {}
         frame = table.source.data["frame_in"][new[0]]
         slider.value = frame
-        slider.trigger("value_throttled", 0, slider.value)
+        slider.trigger("value", 0, slider.value)
         # table.source.selected.indices = []
         # table.source.selected.on_change('indices', table_click_handler(table))
 
@@ -211,8 +235,7 @@ table_source, segments_table_source = setup_sources()
 
 # Slider
 # For preventing going over the last frame
-total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-slider = Slider(start=0, end=1800, value=0, step=1, width=capture_width)
+slider = Slider(start=0, end=FRAME_INTERVAL, value=1, step=1, width=capture_width)
 slider.on_change("value", update_frame)
 slider_component = [Paragraph(text="Use the slider to change frames:"), slider]
 
@@ -324,6 +347,7 @@ descriptions = {
     "wrong_segments": "Wrong segments:",
     "new_segments": "Manually created segments:",
     "current_selection": "Currently selected trajectories:",
+    "stats": "",
 }
 trajectories_tab = Panel(
     child=trajectories_table, title="Current frame", name="trajectories"
