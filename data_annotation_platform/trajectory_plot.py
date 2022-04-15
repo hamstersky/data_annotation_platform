@@ -74,7 +74,7 @@ class TrajectoryPlot:
             line_color="line_color",
             line_alpha=0.8,
             line_width=2.0,
-            line_dash="solid",
+            line_dash="line_dash",
             hover_line_width=2.0,
             hover_line_alpha=1.0,
             selection_line_width=4.0,

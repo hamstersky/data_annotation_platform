@@ -8,7 +8,7 @@ class SegmentsData(Data):
     def __init__(self, source_path):
         super().__init__(source_path)
         # For keeping stats about connections
-        self.data["correct"] = True
+        self.data["correct"] = None
         # For keeping track of new segments added in the annotation tool
         self.data["new"] = False
         self.data["comments"] = ""
@@ -17,10 +17,10 @@ class SegmentsData(Data):
         return self.data[
             (frame_nr >= self.data["frame_in"])
             & (frame_nr <= self.data["frame_out"] + 400)
-            & (self.data["correct"] == True)
+            & (self.data["correct"] != False)
         ]
 
-    def toggle_correct(self, comments=[], ids=None):
+    def set_status(self, status, comments=[], ids=None):
         if ids is None:
             ids = self.selected_ids
         for id in ids:
@@ -28,9 +28,8 @@ class SegmentsData(Data):
             if is_new_segment:
                 self.data.drop(labels=[id], axis=0, inplace=True)
             else:
-                new_label = not self.data.at[id, "correct"]
                 self.data.loc[id, ["correct", "comments"]] = np.array(
-                    [new_label, comments], dtype="object"
+                    [status, comments], dtype="object"
                 )
 
     def create_segment(self, t1, t2):
@@ -77,3 +76,10 @@ class SegmentsData(Data):
 
     def find_next_interest(self, frame_nr):
         return int(self.data[self.data["frame_in"] > frame_nr]["frame_in"].min())
+
+    def get_line_style(self, subset):
+        colors = {True: "navy", None: "red"}
+        line_style = {True: "solid", None: "dashed"}
+        line_color = [colors[i] for i in subset["correct"]]
+        line_dash = [line_style[i] for i in subset["correct"]]
+        return dict(line_color=line_color, line_dash=line_dash)

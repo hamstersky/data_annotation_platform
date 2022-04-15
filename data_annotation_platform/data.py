@@ -21,6 +21,15 @@ class Data:
     def update_data_source(self, frame_nr):
         # TODO: Extract this as a global?
         subset = self.get_frame_subset(frame_nr)
+        # TODO: Better way to include the id / index?
+        line_style = self.get_line_style(subset)
+        self.source.data = {
+            **subset.to_dict(orient="list"),
+            "id": subset.index.values,
+            **line_style,
+        }
+
+    def get_line_style(self, subset):
         colors = [
             "red",
             "magenta",
@@ -32,13 +41,9 @@ class Data:
             "black",
             "navy",
         ]
-        line_colors = [colors[int(i)] for i in subset["class"]]
-        # TODO: Better way to include the id / index?
-        self.source.data = {
-            **subset.to_dict(orient="list"),
-            "id": subset.index.values,
-            "line_color": line_colors,
-        }
+        line_color = [colors[int(i)] for i in subset["class"]]
+        line_dash = ["solid" for i in subset["class"]]
+        return dict(line_color=line_color, line_dash=line_dash)
 
     def get_data(self):
         return self.data

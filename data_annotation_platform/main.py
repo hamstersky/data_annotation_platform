@@ -148,9 +148,22 @@ def connect_handler():
     slider.trigger("value", 0, int(new_frame))
 
 
+def label_handler(label):
+    def callback():
+        global table_source
+        segments.set_status(status=label, comments=incorrect_comment.value)
+        # TODO: Figure out if there's a better way to update the plot
+        slider.trigger("value", 0, slider.value)
+        clear_trajectories(segments)
+        stats.text = update_stats()
+        update_tables()
+
+    return callback
+
+
 def wrong_handler():
     global table_source
-    segments.toggle_correct(incorrect_comment.value)
+    segments.set_status(status=False, comments=incorrect_comment.value)
     # TODO: Figure out if there's a better way to update the plot
     slider.trigger("value", 0, slider.value)
     clear_trajectories(segments)
@@ -180,7 +193,7 @@ def restore_connection():
     ids = []
     for i in indices:
         ids.append(incorrect_segments_table.source.data["id"][i])
-    segments.toggle_correct([], ids)
+    segments.set_status(status=None, comments=[], ids=ids)
     incorrect_segments_table_source.selected._callbacks = {}
     incorrect_segments_table_source.selected.indices = []
     incorrect_segments_table_source.selected.on_change(
@@ -282,7 +295,7 @@ restore_btn.on_click(restore_connection)
 
 # Wrong connection component
 incorrect_btn = Button(label="Incorrect segment")
-incorrect_btn.on_click(wrong_handler)
+incorrect_btn.on_click(label_handler(False))
 incorrect_options = ["none of the below", "reason1", "reason2"]
 incorrect_comment = MultiSelect(options=incorrect_options, value=[], size=3)
 incorrect_component = [
@@ -292,6 +305,9 @@ incorrect_component = [
     incorrect_comment,
     incorrect_btn,
 ]
+
+correct_btn = Button(label="Correct segment")
+correct_btn.on_click(label_handler(True))
 
 # Stats
 stats = PreText(text=update_stats())
@@ -399,7 +415,7 @@ curdoc().add_root(
                 second_forward,
                 next_interest,
             ],
-            [connect_component, incorrect_component],
+            [connect_component, incorrect_component, correct_btn],
         ]
     )
 )
