@@ -148,12 +148,6 @@ def connect_handler():
     slider.trigger("value", 0, int(new_frame))
 
 
-def forward_frames():
-    old = slider.value
-    slider.value += 30
-    slider.trigger("value", old, slider.value)
-
-
 def wrong_handler():
     global table_source
     segments.toggle_correct(incorrect_comment.value)
@@ -175,9 +169,7 @@ def jump_to_handler(attr, old, new):
 def frame_button_handler(value):
     def callback():
         new = slider.value + value
-        if new >= 0 and new <= slider.end:
-            slider.value = new
-            slider.trigger("value", 0, slider.value)
+        jump_to_handler("", 0, new)
 
     return callback
 
@@ -201,12 +193,8 @@ def restore_connection():
 
 def table_click_handler(table):
     def callback(_, old, new):
-        # table.source.selected._callbacks = {}
         frame = table.source.data["frame_in"][new[0]]
-        slider.value = frame
-        slider.trigger("value", 0, slider.value)
-        # table.source.selected.indices = []
-        # table.source.selected.on_change('indices', table_click_handler(table))
+        jump_to_handler("", 0, frame)
 
     return callback
 
