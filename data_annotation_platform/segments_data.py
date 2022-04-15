@@ -75,7 +75,11 @@ class SegmentsData(Data):
         return self.data[self.data["new"] == True]
 
     def find_next_interest(self, frame_nr):
-        return int(self.data[self.data["frame_in"] > frame_nr]["frame_in"].min())
+        return int(
+            self.data[
+                (self.data["frame_in"] > frame_nr) & (pd.isna(self.data["correct"]))
+            ]["frame_in"].min()
+        )
 
     def get_line_style(self, subset):
         colors = {True: "navy", None: "red"}
