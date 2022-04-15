@@ -188,18 +188,16 @@ def frame_button_handler(value):
     return callback
 
 
-def restore_connection():
-    # ids = [incorrect_segments_table_source.data['original_index'][new[0]]]
-    indices = incorrect_segments_table.source.selected.indices
+def reset_label():
+    table = TABLES[tabs.tabs[tabs.active].name]
+    indices = table.source.selected.indices
     ids = []
     for i in indices:
-        ids.append(incorrect_segments_table.source.data["id"][i])
+        ids.append(table.source.data["id"][i])
     segments.set_status(status=None, comments=[], ids=ids)
-    incorrect_segments_table_source.selected._callbacks = {}
-    incorrect_segments_table_source.selected.indices = []
-    incorrect_segments_table_source.selected.on_change(
-        "indices", table_click_handler(incorrect_segments_table)
-    )
+    table.source.selected._callbacks = {}
+    table.source.selected.indices = []
+    table.source.selected.on_change("indices", table_click_handler(table))
     update_tables()
     stats.text = update_stats()
     slider.trigger("value", 0, slider.value)
@@ -214,7 +212,8 @@ def table_click_handler(table):
 
 
 def tab_switch(attr, old, new):
-    restore_btn.visible = tabs.tabs[new].name == "wrong_segments"
+    reset_tables = ["wrong_segments", "correct_segments"]
+    reset_label_btn.visible = tabs.tabs[new].name in reset_tables
     tab_description.text = descriptions[tabs.tabs[new].name]
 
 
@@ -291,8 +290,8 @@ connect_component = [
 ]
 
 # Restore segment button
-restore_btn = Button(label="Restore segment", visible=False)
-restore_btn.on_click(restore_connection)
+reset_label_btn = Button(label="Reset label", visible=False)
+reset_label_btn.on_click(reset_label)
 
 # Wrong connection component
 incorrect_btn = Button(label="Incorrect segment")
@@ -416,11 +415,20 @@ segments.get_source().selected.on_change("indices", bind_cb_obj(segments))
 # Setup initial frame
 update_frame("value", 0, 0)
 
+TABLES = {
+    "trajectories": trajectories_table,
+    "wrong_segments": incorrect_segments_table,
+    "correct_segments": correct_segments_table,
+    "new_segments": new_segments_table,
+    "current_selection": selection_table,
+}
+
+
 # Create layout
 curdoc().add_root(
     layout(
         [
-            [plot.plot, [tab_description, tabs, restore_btn]],
+            [plot.plot, [tab_description, tabs, reset_label_btn]],
             *slider_component,
             jump_to,
             [

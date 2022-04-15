@@ -60,7 +60,7 @@ class SegmentsData(Data):
 
     def get_correct_segment_count(self):
         return self.data[
-            (self.data["new"] == False) & (self.data["correct"] == True)
+            (self.data["new"] == False) & (self.data["correct"] != False)
         ].shape[0]
 
     def get_incorrect_segment_count(self):
