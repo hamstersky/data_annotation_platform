@@ -51,8 +51,8 @@ class SegmentsData(Data):
         self.data = pd.concat([self.data, segment], ignore_index=True)
         self.data.index.name = "id"
 
-    def get_incorrect_segments(self):
-        return self.data[self.data["correct"] == False]
+    def get_segments_by_status(self, status):
+        return self.data[self.data["correct"] == status]
 
     # Returns count of segments only created by the algorithm
     def get_total_segment_count(self):

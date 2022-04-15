@@ -54,10 +54,11 @@ def update_tables():
     segments_table_source.data = segments.get_data()
     # TODO: Find better way for keeping track of the original index
     # At least remove the direct access to the index
-    incorrect_segments_table_source.data = segments.get_incorrect_segments()
+    incorrect_segments_table_source.data = segments.get_segments_by_status(False)
     incorrect_segments_table_source.data[
         "original_index"
-    ] = segments.get_incorrect_segments().index
+    ] = segments.get_segments_by_status(False).index
+    correct_segments_table_source.data = segments.get_segments_by_status(True)
     new_segments_table_source.data = segments.get_new_segments()
 
 
@@ -335,7 +336,9 @@ segments_table_cols = [
 segments_table = DataTable(source=segments_table_source, columns=segments_table_cols)
 
 # Incorrect segments component
-incorrect_segments_table_source = ColumnDataSource(segments.get_incorrect_segments())
+incorrect_segments_table_source = ColumnDataSource(
+    segments.get_segments_by_status(False)
+)
 incorrect_segments_table = DataTable(
     source=incorrect_segments_table_source,
     **{key: table_params[key] for key in table_params if key != "columns"},
@@ -358,9 +361,17 @@ new_segments_table_source.selected.on_change(
     "indices", table_click_handler(new_segments_table)
 )
 
+# Correct segments table
+correct_segments_table_source = ColumnDataSource(segments.get_segments_by_status(True))
+correct_segments_table = DataTable(source=correct_segments_table_source, **table_params)
+correct_segments_table_source.selected.on_change(
+    "indices", table_click_handler(correct_segments_table)
+)
+
 descriptions = {
     "trajectories": "Trajectories/candidates on current frame. Click a trajectory to select it:",
     "wrong_segments": "Wrong segments:",
+    "correct_segments": "Correct segments:",
     "new_segments": "Manually created segments:",
     "current_selection": "Currently selected trajectories:",
     "stats": "",
@@ -370,6 +381,9 @@ trajectories_tab = Panel(
 )
 wrong_segments_tab = Panel(
     child=incorrect_segments_table, title="Wrong segments", name="wrong_segments"
+)
+correct_segments_tab = Panel(
+    child=correct_segments_table, title="Correct segments", name="correct_segments"
 )
 new_segments_tab = Panel(
     child=new_segments_table, title="New connections", name="new_segments"
@@ -382,6 +396,7 @@ tab_description = Paragraph(text=descriptions["trajectories"])
 tabs = Tabs(
     tabs=[
         trajectories_tab,
+        correct_segments_tab,
         wrong_segments_tab,
         new_segments_tab,
         selection_tab,
