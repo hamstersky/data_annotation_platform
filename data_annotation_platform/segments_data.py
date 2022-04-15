@@ -74,3 +74,6 @@ class SegmentsData(Data):
 
     def get_new_segments(self):
         return self.data[self.data["new"] == True]
+
+    def find_next_interest(self, frame_nr):
+        return int(self.data[self.data["frame_in"] > frame_nr]["frame_in"].min())

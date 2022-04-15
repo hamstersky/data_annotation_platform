@@ -216,6 +216,13 @@ def tab_switch(attr, old, new):
     tab_description.text = descriptions[tabs.tabs[new].name]
 
 
+def next_interest_handler():
+    frame_ins = segments.get_source().data["frame_in"]
+    frame = max(frame_ins) if frame_ins else slider.value
+    next_frame = segments.find_next_interest(int(frame))
+    jump_to_handler("", 0, next_frame)
+
+
 # ===============
 # Sources setup
 # ===============
@@ -266,6 +273,11 @@ previous_frame = Button(
     label="-1 frame", sizing_mode="fixed", height=btn_size, width=btn_size
 )
 previous_frame.on_click(frame_button_handler(-1))
+
+next_interest = Button(
+    label="Jump to next interest", sizing_mode="fixed", height=btn_size, width=btn_size
+)
+next_interest.on_click(next_interest_handler)
 
 connect = Button(label="Connect")
 connect.on_click(connect_handler)
@@ -392,7 +404,13 @@ curdoc().add_root(
             [plot.plot, [tab_description, tabs, restore_btn]],
             *slider_component,
             jump_to,
-            [second_backward, previous_frame, next_frame, second_forward],
+            [
+                second_backward,
+                previous_frame,
+                next_frame,
+                second_forward,
+                next_interest,
+            ],
             [connect_component, incorrect_component],
         ]
     )
