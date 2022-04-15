@@ -4,10 +4,11 @@ from bokeh.plotting import figure
 
 
 class TrajectoryPlot:
-    def __init__(self, trajectories_data, segments_data):
+    def __init__(self, trajectories_data, segments_data, size_scalar=2):
         # TODO: Pass as a paremeter
         self.cap_w = 640
         self.cap_h = 360
+        self.size_scalar = size_scalar
         self.plot = self.configure_plot()
         self.img_source = ColumnDataSource(data=dict(image=[]))
         # TODO: Consider having a return method instead
@@ -39,8 +40,8 @@ class TrajectoryPlot:
         p.grid.visible = False
         p.axis.visible = False
         p.outline_line_width = 0
-        p.plot_height = self.cap_h
-        p.plot_width = self.cap_w
+        p.plot_height = int(self.cap_h * self.size_scalar)
+        p.plot_width = int(self.cap_w * self.size_scalar)
         return p
 
     def setup_renderers(self, trajectories_data, segments_data):

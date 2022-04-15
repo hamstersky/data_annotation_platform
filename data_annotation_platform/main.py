@@ -38,7 +38,6 @@ FRAME_INTERVAL = 1800
 # Helpers
 # ===============
 def clear_trajectories(trigger):
-    table_source.data["traj_id"] = []
     trigger.update_selected_data([], [])
 
 
@@ -51,7 +50,6 @@ Accuracy: {"{:.2f}".format(segments.get_correct_incorrect_ratio() * 100)}%
 
 
 def update_tables():
-    segments_table_source.data = segments.get_data()
     # TODO: Find better way for keeping track of the original index
     # At least remove the direct access to the index
     incorrect_segments_table_source.data = segments.get_segments_by_status(False)
@@ -116,7 +114,6 @@ def tap_handler(trigger, old, new):
             trigger.update_selected_data(old, [0])
         else:
             trigger.update_selected_data(old, new)
-        table_source.stream(dict(traj_id=[selected_traj_id]))
     else:
         clear_trajectories(trigger)
         # TODO: Other way to get the slider value? Maybe consider the current
@@ -225,31 +222,21 @@ def next_interest_handler():
 
 
 # ===============
-# Sources setup
-# ===============
-
-
-def setup_sources():
-    table_source = ColumnDataSource(data=dict(traj_id=[]))
-    segments_table_source = ColumnDataSource(segments.get_data())
-    return (table_source, segments_table_source)
-
-
-table_source, segments_table_source = setup_sources()
-
-# ===============
 # Widgets / Layout
 # ===============
 
 # Slider
 # For preventing going over the last frame
-slider = Slider(start=0, end=FRAME_INTERVAL, value=1, step=1, width=capture_width)
+slider = Slider(start=0, end=FRAME_INTERVAL, value=1, step=1, width=plot.plot.width)
 slider.on_change("value", update_frame)
 slider_component = [Paragraph(text="Use the slider to change frames:"), slider]
 
 # Jump to frame
 jump_to = NumericInput(
-    low=1, high=total_frames, placeholder="Jump to specific frame", width=capture_width
+    low=1,
+    high=total_frames,
+    placeholder="Jump to specific frame",
+    width=plot.plot.width,
 )
 jump_to.on_change("value", jump_to_handler)
 
@@ -312,11 +299,6 @@ correct_btn.on_click(label_handler(True))
 # Stats
 stats = PreText(text=update_stats())
 
-# Selection table
-selection_table = DataTable(
-    source=table_source, columns=[TableColumn(field="traj_id", title="id")], width=300
-)
-
 # Settings for all tables
 columns = [
     TableColumn(field=c, title=c) for c in ["id", "frame_in", "frame_out", "class"]
@@ -327,12 +309,6 @@ table_params = {
     "height": 250,
     "width": 550,
 }
-
-# Segments table
-segments_table_cols = [
-    TableColumn(field=c, title=c) for c in segments.get_data().columns
-]
-segments_table = DataTable(source=segments_table_source, columns=segments_table_cols)
 
 # Incorrect segments component
 incorrect_segments_table_source = ColumnDataSource(
@@ -353,9 +329,7 @@ trajectories_table = DataTable(source=trajectories.get_source(), **table_params)
 
 # New segments table
 new_segments_table_source = ColumnDataSource(segments.get_new_segments())
-new_segments_table = DataTable(
-    source=new_segments_table_source, columns=columns, width=500, index_position=None
-)
+new_segments_table = DataTable(source=new_segments_table_source, **table_params)
 new_segments_table_source.selected.on_change(
     "indices", table_click_handler(new_segments_table)
 )
@@ -387,9 +361,7 @@ correct_segments_tab = Panel(
 new_segments_tab = Panel(
     child=new_segments_table, title="New connections", name="new_segments"
 )
-selection_tab = Panel(
-    child=selection_table, title="Current selection", name="current_selection"
-)
+
 stats_tab = Panel(child=stats, title="Statistics", name="stats")
 tab_description = Paragraph(text=descriptions["trajectories"])
 tabs = Tabs(
@@ -398,7 +370,6 @@ tabs = Tabs(
         correct_segments_tab,
         wrong_segments_tab,
         new_segments_tab,
-        selection_tab,
         stats_tab,
     ],
     height=280,
@@ -420,7 +391,6 @@ TABLES = {
     "wrong_segments": incorrect_segments_table,
     "correct_segments": correct_segments_table,
     "new_segments": new_segments_table,
-    "current_selection": selection_table,
 }
 
 
