@@ -359,7 +359,7 @@ correct_segments_tab = Panel(
     child=correct_segments_table, title="Correct segments", name="correct_segments"
 )
 new_segments_tab = Panel(
-    child=new_segments_table, title="New connections", name="new_segments"
+    child=new_segments_table, title="New segments", name="new_segments"
 )
 
 stats_tab = Panel(child=stats, title="Statistics", name="stats")
