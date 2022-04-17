@@ -490,3 +490,4 @@ cython_debug/
 
 data
 videos
+.vscode
