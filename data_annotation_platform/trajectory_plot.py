@@ -1,4 +1,4 @@
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, Legend
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import figure
 
@@ -26,6 +26,7 @@ class TrajectoryPlot:
                 ],
             )
         )
+        self.configure_legend()
 
     def configure_plot(self):
         p = figure(
@@ -68,6 +69,7 @@ class TrajectoryPlot:
             # selection_line_color='red',
             nonselection_line_width=2.0,
             nonselection_line_alpha=0.7,
+            legend_label="broken trajectories",
         )
 
         self.segments_lines = self.plot.multi_line(
@@ -84,6 +86,29 @@ class TrajectoryPlot:
             nonselection_line_width=2.0,
             nonselection_line_alpha=0.7,
         )
+
+        # Below renderers are only used for legend as the segments' line color and
+        # dash are dynamic
+        self.not_labeled = self.plot.multi_line(
+            line_color="red",
+            line_alpha=0.8,
+            line_width=2.0,
+            line_dash="dashed",
+            legend_label="not labeled segments",
+        )
+
+        self.labeled = self.plot.multi_line(
+            line_color="navy",
+            line_alpha=0.8,
+            line_width=2.0,
+            line_dash="solid",
+            legend_label="correct segments",
+        )
+
+    def configure_legend(self):
+        self.plot.legend.orientation = "horizontal"
+        self.plot.legend.spacing = 15
+        self.plot.legend.background_fill_alpha = 0.3
 
     def update_img(self, img):
         self.img_plot.data_source.data["image"] = [img]
