@@ -330,6 +330,7 @@ table_params = {
     "index_position": None,
     "height": 250,
     "width": 550,
+    "selectable": "checkbox",
 }
 
 # Incorrect segments component
