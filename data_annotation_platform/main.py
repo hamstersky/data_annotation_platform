@@ -33,6 +33,7 @@ capture_width = int(cap.get(3))
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 current_minute = 0
 FRAME_INTERVAL = 1800
+active_traj_type = None
 
 # ===============
 # Helpers
@@ -78,6 +79,21 @@ def update_slider(frame_nr):
             slider.value = slider.end - 1
 
 
+def update_state():
+    if len(trajectories.get_selected_trajectories()) > 1:
+        connect_btn.disabled = False
+        incorrect_btn.disabled = True
+        correct_btn.disabled = True
+    elif segments.get_selected_trajectories():
+        connect_btn.disabled = True
+        incorrect_btn.disabled = False
+        correct_btn.disabled = False
+    else:
+        connect_btn.disabled = True
+        incorrect_btn.disabled = True
+        correct_btn.disabled = True
+
+
 # ===============
 # Callbacks
 # ===============
@@ -121,6 +137,7 @@ def tap_handler(trigger, old, new):
         # some other new class?
         # Restores state without candidate trajectories
         update_sources([trajectories], slider.value)
+    update_state()
 
 
 def connect_handler():
@@ -209,7 +226,7 @@ def table_click_handler(table):
 
 
 def tab_switch(attr, old, new):
-    reset_tables = ["wrong_segments", "correct_segments"]
+    reset_tables = ["wrong_segments", "correct_segments", "new_segments"]
     reset_label_btn.visible = tabs.tabs[new].name in reset_tables
     tab_description.text = descriptions[tabs.tabs[new].name]
 
@@ -267,13 +284,14 @@ next_interest = Button(
 )
 next_interest.on_click(next_interest_handler)
 
-connect = Button(label="Connect")
-connect.on_click(connect_handler)
+btn_settings = {"disabled": True}
+connect_btn = Button(label="Connect", **btn_settings)
+connect_btn.on_click(connect_handler)
 connect_component = [
     Paragraph(
         text="Select one or more trajectories to connect them with the button below:"
     ),
-    connect,
+    connect_btn,
 ]
 
 # Restore segment button
@@ -281,7 +299,7 @@ reset_label_btn = Button(label="Reset label", visible=False)
 reset_label_btn.on_click(reset_label)
 
 # Wrong connection component
-incorrect_btn = Button(label="Incorrect segment")
+incorrect_btn = Button(label="Incorrect segment", **btn_settings)
 incorrect_btn.on_click(label_handler(False))
 incorrect_options = ["reason1", "reason2"]
 incorrect_comment = MultiChoice(
@@ -295,8 +313,10 @@ incorrect_component = [
     incorrect_btn,
 ]
 
-correct_btn = Button(label="Correct segment")
+correct_btn = Button(label="Correct segment", **btn_settings)
 correct_btn.on_click(label_handler(True))
+
+labeling_controls = [connect_btn, incorrect_btn, correct_btn]
 
 # Stats
 stats = PreText(text=update_stats())
@@ -395,12 +415,19 @@ TABLES = {
     "new_segments": new_segments_table,
 }
 
+BUTTONS = [connect_btn, incorrect_btn, correct_btn]
+
+for btn in BUTTONS:
+    btn.on_click(update_state)
 
 # Create layout
 curdoc().add_root(
     layout(
         [
-            [plot.plot, [tab_description, tabs, reset_label_btn]],
+            [
+                plot.plot,
+                [tab_description, tabs, reset_label_btn, *labeling_controls],
+            ],
             *slider_component,
             jump_to,
             [
@@ -410,7 +437,6 @@ curdoc().add_root(
                 second_forward,
                 next_interest,
             ],
-            [connect_component, incorrect_component, correct_btn],
         ]
     )
 )
