@@ -8,7 +8,7 @@ from bokeh.models import (
     ColumnDataSource,
     CustomJS,
     DataTable,
-    MultiSelect,
+    MultiChoice,
     NumericInput,
     Panel,
     Paragraph,
@@ -283,11 +283,13 @@ reset_label_btn.on_click(reset_label)
 # Wrong connection component
 incorrect_btn = Button(label="Incorrect segment")
 incorrect_btn.on_click(label_handler(False))
-incorrect_options = ["none of the below", "reason1", "reason2"]
-incorrect_comment = MultiSelect(options=incorrect_options, value=[], size=3)
+incorrect_options = ["reason1", "reason2"]
+incorrect_comment = MultiChoice(
+    options=incorrect_options,
+)
 incorrect_component = [
     Paragraph(
-        text="Select an incorrect connection and optionally select the reason why the connection is incorrect. You can select multiple by holding CTRL: "
+        text="Select an incorrect connection and optionally select the reason(s) why the connection is incorrect by clicking on the input box."
     ),
     incorrect_comment,
     incorrect_btn,
