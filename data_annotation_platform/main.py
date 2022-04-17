@@ -407,7 +407,7 @@ segments.get_source().selected.on_change("indices", bind_cb_obj(segments))
 
 
 # Setup initial frame
-update_frame("value", 0, 0)
+update_frame("value", 0, 1)
 
 TABLES = {
     "trajectories": trajectories_table,
