@@ -72,17 +72,6 @@ def update_slider_limits():
     else:
         slider.end = (current_minute + 1) * FRAME_INTERVAL
 
-    # if frame_nr > 0 and frame_nr < total_frames:
-    #     global current_minute
-    #     if frame_nr > slider.end - 1:
-    #         current_minute += 1
-    #         update_slider_limits()
-    #         slider.value = slider.start + 1
-    #     elif frame_nr < slider.start + 1:
-    #         current_minute -= 1
-    #         update_slider_limits()
-    #         slider.value = slider.end - 1
-
 
 def update_state():
     if len(trajectories.get_selected_trajectories()) > 1:
