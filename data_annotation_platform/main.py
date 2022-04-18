@@ -38,8 +38,11 @@ active_traj_type = None
 # ===============
 # Helpers
 # ===============
-def clear_trajectories(trigger):
-    trigger.update_selected_data([], [])
+def clear_trajectories():
+    trajectories.update_selected_data([], [])
+    segments.update_selected_data([], [])
+    for table in TABLES.values():
+        table.source.selected.indices = []
 
 
 def update_stats():
@@ -134,7 +137,7 @@ def tap_handler(trigger, old, new):
         else:
             trigger.update_selected_data(old, new)
     else:
-        clear_trajectories(trigger)
+        clear_trajectories()
         # TODO: Other way to get the slider value? Maybe consider the current
         # frame to be some global variable or instance variable of plot class or
         # some other new class?
@@ -160,7 +163,7 @@ def connect_handler():
         segments.append_segment(segment)
         new_frame = segment["frame_out"]
     update_tables()
-    clear_trajectories(trajectories)
+    clear_trajectories()
     # TODO: Figure out if there's a better way to update the plot
     # Jump to the frame_out value of the added segment
     slider.trigger("value", 0, int(new_frame))
@@ -172,7 +175,7 @@ def label_handler(label):
         segments.set_status(status=label, comments=incorrect_comment.value)
         # TODO: Figure out if there's a better way to update the plot
         slider.trigger("value", 0, slider.value)
-        clear_trajectories(segments)
+        clear_trajectories()
         stats.text = update_stats()
         update_tables()
 
@@ -184,7 +187,7 @@ def wrong_handler():
     segments.set_status(status=False, comments=incorrect_comment.value)
     # TODO: Figure out if there's a better way to update the plot
     slider.trigger("value", 0, slider.value)
-    clear_trajectories(segments)
+    clear_trajectories()
     stats.text = update_stats()
     update_tables()
 
@@ -222,8 +225,9 @@ def reset_label():
 
 def table_click_handler(table):
     def callback(_, old, new):
-        frame = table.source.data["frame_in"][new[0]]
-        jump_to_handler("", 0, frame)
+        if new:
+            frame = table.source.data["frame_in"][new[0]]
+            jump_to_handler("", 0, frame)
 
     return callback
 
@@ -308,7 +312,16 @@ incorrect_comment = MultiChoice(
 correct_btn = Button(label="Correct segment", **btn_settings)
 correct_btn.on_click(label_handler(True))
 
-labeling_controls = [connect_btn, correct_btn, incorrect_btn, incorrect_comment]
+reset_select_btn = Button(label="Reset selection")
+reset_select_btn.on_click(clear_trajectories)
+
+labeling_controls = [
+    reset_select_btn,
+    connect_btn,
+    correct_btn,
+    incorrect_btn,
+    incorrect_comment,
+]
 
 # Stats
 stats = PreText(text=update_stats())
@@ -322,7 +335,6 @@ table_params = {
     "index_position": None,
     "height": 250,
     "width": 550,
-    "selectable": "checkbox",
 }
 
 # Incorrect segments component
@@ -408,7 +420,7 @@ TABLES = {
     "new_segments": new_segments_table,
 }
 
-BUTTONS = [connect_btn, incorrect_btn, correct_btn]
+BUTTONS = [reset_select_btn, connect_btn, incorrect_btn, correct_btn]
 
 for btn in BUTTONS:
     btn.on_click(update_state)
