@@ -65,8 +65,12 @@ def update_tables():
 
 
 def update_slider_limits():
+    max_minute = total_frames // 60 // 30
     slider.start = current_minute * FRAME_INTERVAL
-    slider.end = (current_minute + 1) * FRAME_INTERVAL
+    if current_minute == max_minute:
+        slider.end = total_frames - 1
+    else:
+        slider.end = (current_minute + 1) * FRAME_INTERVAL
 
     # if frame_nr > 0 and frame_nr < total_frames:
     #     global current_minute
@@ -104,7 +108,6 @@ def update_state():
 
 
 def update_frame(attr, old, frame_nr):
-    # update_slider(frame_nr)
     frame = get_frame_from_cap(cap, frame_nr)
     img = get_image_from_frame(frame)
     plot.update_img(img)
@@ -247,7 +250,9 @@ def next_interest_handler():
 def update_slider(value):
     def callback():
         global current_minute
-        if current_minute + value >= 0:
+        max_minute = total_frames // 60 // 30
+        next_minute = current_minute + value
+        if next_minute >= 0 and next_minute <= max_minute:
             current_minute += value
             update_slider_limits()
             slider.value = slider.end if value < 0 else slider.start
