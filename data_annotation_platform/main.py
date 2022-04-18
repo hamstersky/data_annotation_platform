@@ -111,6 +111,7 @@ def update_frame(attr, old, frame_nr):
     img = get_image_from_frame(frame)
     plot.update_img(img)
     update_sources([trajectories, segments], frame_nr)
+    clear_trajectories()
 
 
 def bind_cb_obj(trigger):
@@ -410,9 +411,6 @@ trajectories.get_source().selected.on_change("indices", bind_cb_obj(trajectories
 segments.get_source().selected.on_change("indices", bind_cb_obj(segments))
 
 
-# Setup initial frame
-update_frame("value", 0, 1)
-
 TABLES = {
     "trajectories": trajectories_table,
     "wrong_segments": incorrect_segments_table,
@@ -424,6 +422,9 @@ BUTTONS = [reset_select_btn, connect_btn, incorrect_btn, correct_btn]
 
 for btn in BUTTONS:
     btn.on_click(update_state)
+
+# Setup initial frame
+update_frame("value", 0, 1)
 
 # Create layout
 curdoc().add_root(
