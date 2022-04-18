@@ -65,21 +65,19 @@ def update_tables():
 
 
 def update_slider_limits():
-    slider.start = current_minute * FRAME_INTERVAL - 1
-    slider.end = (current_minute + 1) * FRAME_INTERVAL + 1
+    slider.start = current_minute * FRAME_INTERVAL
+    slider.end = (current_minute + 1) * FRAME_INTERVAL
 
-
-def update_slider(frame_nr):
-    if frame_nr > 0 and frame_nr < total_frames:
-        global current_minute
-        if frame_nr > slider.end - 1:
-            current_minute += 1
-            update_slider_limits()
-            slider.value = slider.start + 1
-        elif frame_nr < slider.start + 1:
-            current_minute -= 1
-            update_slider_limits()
-            slider.value = slider.end - 1
+    # if frame_nr > 0 and frame_nr < total_frames:
+    #     global current_minute
+    #     if frame_nr > slider.end - 1:
+    #         current_minute += 1
+    #         update_slider_limits()
+    #         slider.value = slider.start + 1
+    #     elif frame_nr < slider.start + 1:
+    #         current_minute -= 1
+    #         update_slider_limits()
+    #         slider.value = slider.end - 1
 
 
 def update_state():
@@ -106,7 +104,7 @@ def update_state():
 
 
 def update_frame(attr, old, frame_nr):
-    update_slider(frame_nr)
+    # update_slider(frame_nr)
     frame = get_frame_from_cap(cap, frame_nr)
     img = get_image_from_frame(frame)
     plot.update_img(img)
@@ -246,15 +244,40 @@ def next_interest_handler():
     jump_to_handler("", 0, next_frame)
 
 
+def update_slider(value):
+    def callback():
+        global current_minute
+        if current_minute + value >= 0:
+            current_minute += value
+            update_slider_limits()
+            slider.value = slider.end if value < 0 else slider.start
+
+    return callback
+
+
 # ===============
 # Widgets / Layout
 # ===============
 
 # Slider
 # For preventing going over the last frame
-slider = Slider(start=0, end=FRAME_INTERVAL, value=1, step=1, width=plot.plot.width)
+slider = Slider(
+    start=0,
+    end=FRAME_INTERVAL,
+    value=1,
+    step=1,
+    width=plot.plot.width - 150,
+    margin=(0, 15, 0, 15),
+)
 slider.on_change("value", update_frame)
-slider_component = [Paragraph(text="Use the slider to change frames:"), slider]
+next_min_btn = Button(label="+1min", width=50)
+next_min_btn.on_click(update_slider(1))
+prev_min_btn = Button(label="-1min", width=50)
+prev_min_btn.on_click(update_slider(-1))
+slider_component = [
+    Paragraph(text="Use the slider to change frames:"),
+    [prev_min_btn, slider, next_min_btn],
+]
 
 # Jump to frame
 jump_to = NumericInput(
