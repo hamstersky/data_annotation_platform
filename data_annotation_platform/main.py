@@ -83,14 +83,17 @@ def update_state():
     if len(trajectories.get_selected_trajectories()) > 1:
         connect_btn.disabled = False
         incorrect_btn.disabled = True
+        incorrect_comment.visible = False
         correct_btn.disabled = True
     elif segments.get_selected_trajectories():
         connect_btn.disabled = True
         incorrect_btn.disabled = False
+        incorrect_comment.visible = True
         correct_btn.disabled = False
     else:
         connect_btn.disabled = True
         incorrect_btn.disabled = True
+        incorrect_comment.visible = False
         correct_btn.disabled = True
 
 
@@ -287,12 +290,6 @@ next_interest.on_click(next_interest_handler)
 btn_settings = {"disabled": True}
 connect_btn = Button(label="Connect", **btn_settings)
 connect_btn.on_click(connect_handler)
-connect_component = [
-    Paragraph(
-        text="Select one or more trajectories to connect them with the button below:"
-    ),
-    connect_btn,
-]
 
 # Restore segment button
 reset_label_btn = Button(label="Reset label", visible=False)
@@ -304,19 +301,14 @@ incorrect_btn.on_click(label_handler(False))
 incorrect_options = ["reason1", "reason2"]
 incorrect_comment = MultiChoice(
     options=incorrect_options,
+    visible=False,
+    title="Select the reason(s) why the connection is incorrect by clicking on the input box.",
 )
-incorrect_component = [
-    Paragraph(
-        text="Select an incorrect connection and optionally select the reason(s) why the connection is incorrect by clicking on the input box."
-    ),
-    incorrect_comment,
-    incorrect_btn,
-]
 
 correct_btn = Button(label="Correct segment", **btn_settings)
 correct_btn.on_click(label_handler(True))
 
-labeling_controls = [connect_btn, incorrect_btn, correct_btn]
+labeling_controls = [connect_btn, correct_btn, incorrect_btn, incorrect_comment]
 
 # Stats
 stats = PreText(text=update_stats())
