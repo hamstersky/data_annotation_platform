@@ -25,13 +25,12 @@ from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
 import os
+import settings
 import session
-
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = TrajectoriesData("./data/broken_trajectories.pkl")
-segments = SegmentsData(session.segments_path)
-
+segments = settings.data["segments"]
 plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -447,55 +446,57 @@ for btn in BUTTONS:
 # Setup initial frame
 update_frame("value", 0, 1)
 
-# Bokeh doesn't provide an option to call arbitrary JS, it always requires a callback
-# As a workaround, create a text widget which is not visible
-# When the text changes, it trigger Custom JS code
-store_cookie_trigger = PreText(text="", visible=False)
-
-store_cookie = CustomJS(
-    args=dict(uid=session.uid),
-    code="""
-        document.cookie = "uid=" + uid + ";max-age=31536000;SameSite=Strict"
-    """,
+slider_row = row(prev_min_btn, slider, next_min_btn)
+buttons_row = row(
+    second_backward,
+    previous_frame,
+    next_frame,
+    second_forward,
+    next_interest,
+    session.save_progress(),
 )
-store_cookie_trigger.js_on_change("text", store_cookie)
-
-
-def save():
-    # Trigger the callback
-    store_cookie_trigger.text = store_cookie_trigger.text + "1"
-    segments.export_data(f"./data/{session.uid}")
-
-
-save_btn = Button(label="Save progress", height=btn_size, width_policy="min")
-save_btn.on_click(save)
-curdoc().add_periodic_callback(save, 60000)
+navigation = column(slider_row, jump_to, buttons_row)
+table_tabs = column(
+    tab_description,
+    tabs,
+)
+labeling_controls = column(
+    table_tabs,
+    reset_label_btn,
+    reset_select_btn,
+    connect_btn,
+    correct_btn,
+    incorrect_btn,
+    incorrect_comment,
+)
+curdoc().add_root(row(plot.plot, labeling_controls))
+curdoc().add_root(navigation)
 
 
 # Create layout
-curdoc().add_root(
-    layout(
-        [
-            [
-                plot.plot,
-                [
-                    tab_description,
-                    tabs,
-                    reset_label_btn,
-                    *labeling_controls,
-                ],
-            ],
-            *slider_component,
-            jump_to,
-            [
-                second_backward,
-                previous_frame,
-                next_frame,
-                second_forward,
-                next_interest,
-                save_btn,
-            ],
-            store_cookie_trigger,
-        ]
-    )
-)
+# curdoc().add_root(
+#     layout(
+#         [
+#             [
+#                 plot.plot,
+#                 [
+#                     tab_description,
+#                     tabs,
+#                     reset_label_btn,
+#                     *labeling_controls,
+#                 ],
+#             ],
+#             *slider_component,
+#             jump_to,
+#             [
+#                 second_backward,
+#                 previous_frame,
+#                 next_frame,
+#                 second_forward,
+#                 next_interest,
+#                 save_btn,
+#             ],
+#             store_cookie_trigger,
+#         ]
+#     )
+# )
