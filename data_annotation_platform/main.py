@@ -27,6 +27,7 @@ from trajectory_plot import TrajectoryPlot
 import os
 import settings
 import session
+from event import subscribe, emit
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = TrajectoriesData("./data/broken_trajectories.pkl")
@@ -35,6 +36,7 @@ plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 current_minute = 0
+current_frame = 0
 FRAME_INTERVAL = 1800
 active_traj_type = None
 
@@ -186,18 +188,18 @@ def wrong_handler():
     update_tables()
 
 
-def jump_to_handler(attr, old, new):
+def handle_jump_to_frame(attr, old, new):
+    global current_frame
     global current_minute
     current_minute = new // 30 // 60
-    update_slider_limits()
-    slider.value = new
-    slider.trigger("value", 0, new)
+    current_frame = new
+    emit("frame_updated")
 
 
-def frame_button_handler(value):
+def handle_frame_navigation(value):
     def callback():
-        new = slider.value + value
-        jump_to_handler("", 0, new)
+        new_frame = current_minute + value
+        handle_jump_to_frame("", 0, new_frame)
 
     return callback
 
@@ -221,7 +223,7 @@ def table_click_handler(table):
     def callback(_, old, new):
         if new:
             frame = table.source.data["frame_in"][new[0]]
-            jump_to_handler("", 0, frame)
+            handle_jump_to_frame("", 0, frame)
 
     return callback
 
@@ -236,10 +238,10 @@ def next_interest_handler():
     frame_ins = segments.get_source().data["frame_in"]
     frame = max(frame_ins) if frame_ins else slider.value
     next_frame = segments.find_next_interest(int(frame))
-    jump_to_handler("", 0, next_frame)
+    handle_jump_to_frame("", 0, next_frame)
 
 
-def update_slider(value):
+def handle_minute_changed(value):
     def callback():
         global current_minute
         max_minute = total_frames // 60 // 30
@@ -252,9 +254,16 @@ def update_slider(value):
     return callback
 
 
+def update_slider():
+    update_slider_limits()
+    slider.value = current_frame
+    slider.trigger("value", 0, current_frame)
+
+
 # ===============
 # Widgets / Layout
 # ===============
+
 
 # Slider
 # For preventing going over the last frame
@@ -268,13 +277,15 @@ slider = Slider(
 )
 slider.on_change("value", update_frame)
 next_min_btn = Button(label="+1min", width=50)
-next_min_btn.on_click(update_slider(1))
+next_min_btn.on_click(handle_minute_changed(1))
 prev_min_btn = Button(label="-1min", width=50)
-prev_min_btn.on_click(update_slider(-1))
+prev_min_btn.on_click(handle_minute_changed(-1))
 slider_component = [
     Paragraph(text="Use the slider to change frames:"),
     [prev_min_btn, slider, next_min_btn],
 ]
+subscribe("frame_updated", update_slider)
+
 
 # Jump to frame
 jump_to = NumericInput(
@@ -283,29 +294,29 @@ jump_to = NumericInput(
     placeholder="Jump to specific frame",
     width=plot.plot.width,
 )
-jump_to.on_change("value", jump_to_handler)
+jump_to.on_change("value", handle_jump_to_frame)
 
 # Buttons
 btn_size = 75
 second_forward = Button(
     label="+1s", sizing_mode="fixed", height=btn_size, width=btn_size
 )
-second_forward.on_click(frame_button_handler(30))
+second_forward.on_click(handle_frame_navigation(30))
 
 second_backward = Button(
     label="-1s", sizing_mode="fixed", height=btn_size, width=btn_size
 )
-second_backward.on_click(frame_button_handler(-30))
+second_backward.on_click(handle_frame_navigation(-30))
 
 next_frame = Button(
     label="+1 frame", sizing_mode="fixed", height=btn_size, width=btn_size
 )
-next_frame.on_click(frame_button_handler(1))
+next_frame.on_click(handle_frame_navigation(1))
 
 previous_frame = Button(
     label="-1 frame", sizing_mode="fixed", height=btn_size, width=btn_size
 )
-previous_frame.on_click(frame_button_handler(-1))
+previous_frame.on_click(handle_frame_navigation(-1))
 
 next_interest = Button(
     label="Jump to next interest", height=btn_size, width_policy="min"
