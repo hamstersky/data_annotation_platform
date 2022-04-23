@@ -1,6 +1,6 @@
-from pickle import FRAME
-import cv2
+import cv2, uuid
 import numpy as np
+import pandas as pd
 from bokeh.events import Tap
 from bokeh.layouts import column, layout, row
 from bokeh.models import (
@@ -24,10 +24,14 @@ from helpers import get_frame_from_cap, get_image_from_frame, update_sources
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
+import os
+import session
 
-cap = cv2.VideoCapture("../videos/video.m4v")
-trajectories = TrajectoriesData("../data/broken_trajectories.pkl")
-segments = SegmentsData("../data/segments.pkl")
+
+cap = cv2.VideoCapture("./videos/video.m4v")
+trajectories = TrajectoriesData("./data/broken_trajectories.pkl")
+segments = SegmentsData(session.segments_path)
+
 plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -205,7 +209,7 @@ def reset_label():
     ids = []
     for i in indices:
         ids.append(table.source.data["id"][i])
-    segments.set_status(status=None, comments=[], ids=ids)
+    segments.set_status(status=None, comments="", ids=ids)
     table.source.selected._callbacks = {}
     table.source.selected.indices = []
     table.source.selected.on_change("indices", table_click_handler(table))
@@ -305,7 +309,7 @@ previous_frame = Button(
 previous_frame.on_click(frame_button_handler(-1))
 
 next_interest = Button(
-    label="Jump to next interest", sizing_mode="fixed", height=btn_size, width=btn_size
+    label="Jump to next interest", height=btn_size, width_policy="min"
 )
 next_interest.on_click(next_interest_handler)
 
@@ -443,13 +447,43 @@ for btn in BUTTONS:
 # Setup initial frame
 update_frame("value", 0, 1)
 
+# Bokeh doesn't provide an option to call arbitrary JS, it always requires a callback
+# As a workaround, create a text widget which is not visible
+# When the text changes, it trigger Custom JS code
+store_cookie_trigger = PreText(text="", visible=False)
+
+store_cookie = CustomJS(
+    args=dict(uid=session.uid),
+    code="""
+        document.cookie = "uid=" + uid + ";max-age=31536000;SameSite=Strict"
+    """,
+)
+store_cookie_trigger.js_on_change("text", store_cookie)
+
+
+def save():
+    # Trigger the callback
+    store_cookie_trigger.text = store_cookie_trigger.text + "1"
+    segments.export_data(f"./data/{session.uid}")
+
+
+save_btn = Button(label="Save progress", height=btn_size, width_policy="min")
+save_btn.on_click(save)
+curdoc().add_periodic_callback(save, 60000)
+
+
 # Create layout
 curdoc().add_root(
     layout(
         [
             [
                 plot.plot,
-                [tab_description, tabs, reset_label_btn, *labeling_controls],
+                [
+                    tab_description,
+                    tabs,
+                    reset_label_btn,
+                    *labeling_controls,
+                ],
             ],
             *slider_component,
             jump_to,
@@ -459,7 +493,9 @@ curdoc().add_root(
                 next_frame,
                 second_forward,
                 next_interest,
+                save_btn,
             ],
+            store_cookie_trigger,
         ]
     )
 )

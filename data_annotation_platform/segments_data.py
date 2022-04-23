@@ -7,11 +7,15 @@ from data import Data
 class SegmentsData(Data):
     def __init__(self, source_path):
         super().__init__(source_path)
-        # For keeping stats about connections
-        self.data["correct"] = None
-        # For keeping track of new segments added in the annotation tool
-        self.data["new"] = False
-        self.data["comments"] = ""
+
+        # Check if the loaded data already has the annotation columns
+        # This is the case when loading persisted data
+        if "correct" not in self.data.columns:
+            # For keeping the label
+            self.data["correct"] = None
+            # For keeping track of new segments added in the annotation tool
+            self.data["new"] = False
+            self.data["comments"] = ""
 
     def get_frame_subset(self, frame_nr):
         return self.data[
@@ -20,7 +24,7 @@ class SegmentsData(Data):
             & (self.data["correct"] != False)
         ]
 
-    def set_status(self, status, comments=[], ids=None):
+    def set_status(self, status, comments="", ids=None):
         if ids is None:
             ids = self.selected_ids
         for id in ids:
@@ -29,7 +33,7 @@ class SegmentsData(Data):
                 self.data.drop(labels=[id], axis=0, inplace=True)
             else:
                 self.data.loc[id, ["correct", "comments"]] = np.array(
-                    [status, comments], dtype="object"
+                    [status, ",".join(comments)], dtype="object"
                 )
 
     def create_segment(self, t1, t2):

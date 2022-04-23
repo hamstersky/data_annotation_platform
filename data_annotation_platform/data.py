@@ -7,11 +7,6 @@ from bokeh.models import ColumnDataSource
 class Data:
     def __init__(self, source_path):
         self.data = pd.read_pickle(source_path)
-        # TODO: Make the input data already in a format where this will not be necessary
-        self.data.reset_index(inplace=True)
-        # Extract only relevant features
-        self.data = self.data[["xs", "ys", "class", "frame_in", "frame_out"]]
-        self.data.index.name = "id"
         self.source = ColumnDataSource()
         self.selected_ids = []
 
@@ -70,3 +65,6 @@ class Data:
             traj_id = self.source.data["id"][new[0]]
             self.selected_ids.append(traj_id)
             self.source.selected.indices = old + new
+
+    def export_data(self, path):
+        self.data.to_pickle(f"{path}.pkl")
