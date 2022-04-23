@@ -27,16 +27,15 @@ from trajectory_plot import TrajectoryPlot
 import os
 import settings
 import session
+import state
 from event import subscribe, emit
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = TrajectoriesData("./data/broken_trajectories.pkl")
-segments = settings.data["segments"]
+segments = state.segments
 plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-current_minute = 0
-current_frame = 0
 FRAME_INTERVAL = 1800
 active_traj_type = None
 
@@ -71,11 +70,11 @@ def update_tables():
 
 def update_slider_limits():
     max_minute = total_frames // 60 // 30
-    slider.start = current_minute * FRAME_INTERVAL
-    if current_minute == max_minute:
+    slider.start = state.current_minute * FRAME_INTERVAL
+    if state.current_minute == max_minute:
         slider.end = total_frames - 1
     else:
-        slider.end = (current_minute + 1) * FRAME_INTERVAL
+        slider.end = (state.current_minute + 1) * FRAME_INTERVAL
 
 
 def update_state():
@@ -189,16 +188,14 @@ def wrong_handler():
 
 
 def handle_jump_to_frame(attr, old, new):
-    global current_frame
-    global current_minute
-    current_minute = new // 30 // 60
-    current_frame = new
+    state.current_minute = new // 30 // 60
+    state.current_frame = new
     emit("frame_updated")
 
 
 def handle_frame_navigation(value):
     def callback():
-        new_frame = current_minute + value
+        new_frame = state.current_frame + value
         handle_jump_to_frame("", 0, new_frame)
 
     return callback
@@ -243,11 +240,10 @@ def next_interest_handler():
 
 def handle_minute_changed(value):
     def callback():
-        global current_minute
         max_minute = total_frames // 60 // 30
-        next_minute = current_minute + value
+        next_minute = state.current_minute + value
         if next_minute >= 0 and next_minute <= max_minute:
-            current_minute += value
+            state.current_minute += value
             update_slider_limits()
             slider.value = slider.end if value < 0 else slider.start
 
@@ -256,8 +252,8 @@ def handle_minute_changed(value):
 
 def update_slider():
     update_slider_limits()
-    slider.value = current_frame
-    slider.trigger("value", 0, current_frame)
+    slider.value = state.current_frame
+    slider.trigger("value", 0, state.current_frame)
 
 
 # ===============

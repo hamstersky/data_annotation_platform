@@ -31,6 +31,5 @@ def subscribe(event_name, f):
 
 
 def emit(event_name, **kwargs):
-    print(**kwargs)
     for f in subscribers.get(event_name, []):
         f(**kwargs)

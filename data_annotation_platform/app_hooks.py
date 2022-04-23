@@ -1,4 +1,5 @@
 import settings
+import state
 import os
 import uuid
 from segments_data import SegmentsData
@@ -14,4 +15,4 @@ def on_session_created(session_context):
             settings.segments_path = path
     else:
         settings.uid = str(uuid.uuid4())
-    settings.data["segments"] = SegmentsData(settings.segments_path)
+    state.segments = SegmentsData(settings.segments_path)
