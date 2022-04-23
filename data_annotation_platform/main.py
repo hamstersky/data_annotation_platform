@@ -24,18 +24,20 @@ from helpers import get_frame_from_cap, get_image_from_frame, update_sources
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
+from handle_jump_to_frame import handle_jump_to_frame
 import os
 import settings
 import session
 import state
 from event import subscribe, emit
+from navigation import create_navigation
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = TrajectoriesData("./data/broken_trajectories.pkl")
 segments = state.segments
 plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))
-total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+state.total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 FRAME_INTERVAL = 1800
 active_traj_type = None
 
@@ -69,10 +71,10 @@ def update_tables():
 
 
 def update_slider_limits():
-    max_minute = total_frames // 60 // 30
+    max_minute = state.total_frames // 60 // 30
     slider.start = state.current_minute * FRAME_INTERVAL
     if state.current_minute == max_minute:
-        slider.end = total_frames - 1
+        slider.end = state.total_frames - 1
     else:
         slider.end = (state.current_minute + 1) * FRAME_INTERVAL
 
@@ -187,20 +189,6 @@ def wrong_handler():
     update_tables()
 
 
-def handle_jump_to_frame(attr, old, new):
-    state.current_minute = new // 30 // 60
-    state.current_frame = new
-    emit("frame_updated")
-
-
-def handle_frame_navigation(value):
-    def callback():
-        new_frame = state.current_frame + value
-        handle_jump_to_frame("", 0, new_frame)
-
-    return callback
-
-
 def reset_label():
     table = TABLES[tabs.tabs[tabs.active].name]
     indices = table.source.selected.indices
@@ -231,16 +219,9 @@ def tab_switch(attr, old, new):
     tab_description.text = descriptions[tabs.tabs[new].name]
 
 
-def next_interest_handler():
-    frame_ins = segments.get_source().data["frame_in"]
-    frame = max(frame_ins) if frame_ins else state.current_frame
-    next_frame = segments.find_next_interest(int(frame))
-    handle_jump_to_frame("", 0, next_frame)
-
-
 def handle_minute_changed(value):
     def callback():
-        max_minute = total_frames // 60 // 30
+        max_minute = state.total_frames // 60 // 30
         next_minute = state.current_minute + value
         if next_minute >= 0 and next_minute <= max_minute:
             state.current_minute += value
@@ -276,48 +257,12 @@ next_min_btn = Button(label="+1min", width=50)
 next_min_btn.on_click(handle_minute_changed(1))
 prev_min_btn = Button(label="-1min", width=50)
 prev_min_btn.on_click(handle_minute_changed(-1))
+
 slider_component = [
     Paragraph(text="Use the slider to change frames:"),
     [prev_min_btn, slider, next_min_btn],
 ]
 subscribe("frame_updated", update_slider)
-
-
-# Jump to frame
-jump_to = NumericInput(
-    low=1,
-    high=total_frames,
-    placeholder="Jump to specific frame",
-    width=plot.plot.width,
-)
-jump_to.on_change("value", handle_jump_to_frame)
-
-# Buttons
-btn_size = 75
-second_forward = Button(
-    label="+1s", sizing_mode="fixed", height=btn_size, width=btn_size
-)
-second_forward.on_click(handle_frame_navigation(30))
-
-second_backward = Button(
-    label="-1s", sizing_mode="fixed", height=btn_size, width=btn_size
-)
-second_backward.on_click(handle_frame_navigation(-30))
-
-next_frame = Button(
-    label="+1 frame", sizing_mode="fixed", height=btn_size, width=btn_size
-)
-next_frame.on_click(handle_frame_navigation(1))
-
-previous_frame = Button(
-    label="-1 frame", sizing_mode="fixed", height=btn_size, width=btn_size
-)
-previous_frame.on_click(handle_frame_navigation(-1))
-
-next_interest = Button(
-    label="Jump to next interest", height=btn_size, width_policy="min"
-)
-next_interest.on_click(next_interest_handler)
 
 btn_settings = {"disabled": True}
 connect_btn = Button(label="Connect", **btn_settings)
@@ -454,15 +399,12 @@ for btn in BUTTONS:
 update_frame("", 1, 1)
 
 slider_row = row(prev_min_btn, slider, next_min_btn)
-buttons_row = row(
-    second_backward,
-    previous_frame,
-    next_frame,
-    second_forward,
-    next_interest,
+jump_to, *btns = create_navigation()
+navigation_btns = row(
+    *btns,
     session.save_progress(),
 )
-navigation = column(slider_row, jump_to, buttons_row)
+navigation = column(slider_row, jump_to, navigation_btns)
 table_tabs = column(
     tab_description,
     tabs,
