@@ -137,7 +137,7 @@ def tap_handler(trigger, old, new):
         # frame to be some global variable or instance variable of plot class or
         # some other new class?
         # Restores state without candidate trajectories
-        update_sources([trajectories], slider.value)
+        update_sources([trajectories], state.current_frame)
     update_state()
 
 
@@ -161,7 +161,7 @@ def connect_handler():
     clear_trajectories()
     # TODO: Figure out if there's a better way to update the plot
     # Jump to the frame_out value of the added segment
-    slider.trigger("value", 0, int(new_frame))
+    update_frame("", 0, int(new_frame))
 
 
 def label_handler(label):
@@ -169,7 +169,7 @@ def label_handler(label):
         global table_source
         segments.set_status(status=label, comments=incorrect_comment.value)
         # TODO: Figure out if there's a better way to update the plot
-        slider.trigger("value", 0, slider.value)
+        update_frame("", 0, state.current_frame)
         clear_trajectories()
         stats.text = update_stats()
         update_tables()
@@ -181,7 +181,7 @@ def wrong_handler():
     global table_source
     segments.set_status(status=False, comments=incorrect_comment.value)
     # TODO: Figure out if there's a better way to update the plot
-    slider.trigger("value", 0, slider.value)
+    update_frame("", 0, state.current_frame)
     clear_trajectories()
     stats.text = update_stats()
     update_tables()
@@ -213,7 +213,7 @@ def reset_label():
     table.source.selected.on_change("indices", table_click_handler(table))
     update_tables()
     stats.text = update_stats()
-    slider.trigger("value", 0, slider.value)
+    update_frame("", 0, state.current_frame)
 
 
 def table_click_handler(table):
@@ -233,7 +233,7 @@ def tab_switch(attr, old, new):
 
 def next_interest_handler():
     frame_ins = segments.get_source().data["frame_in"]
-    frame = max(frame_ins) if frame_ins else slider.value
+    frame = max(frame_ins) if frame_ins else state.current_frame
     next_frame = segments.find_next_interest(int(frame))
     handle_jump_to_frame("", 0, next_frame)
 
@@ -253,7 +253,7 @@ def handle_minute_changed(value):
 def update_slider():
     update_slider_limits()
     slider.value = state.current_frame
-    slider.trigger("value", 0, state.current_frame)
+    update_frame("", 0, state.current_frame)
 
 
 # ===============
@@ -451,7 +451,7 @@ for btn in BUTTONS:
     btn.on_click(update_state)
 
 # Setup initial frame
-update_frame("value", 0, 1)
+update_frame("", 1, 1)
 
 slider_row = row(prev_min_btn, slider, next_min_btn)
 buttons_row = row(
