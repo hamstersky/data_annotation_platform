@@ -2,6 +2,7 @@ from bokeh.models import PreText, CustomJS, Button
 from bokeh.plotting import curdoc
 
 import settings
+import state
 import styles
 
 
@@ -22,7 +23,7 @@ def save_progress():
     def save():
         # Trigger the callback
         store_cookie_trigger.text = f"{store_cookie_trigger.text}1"
-        settings.data["segments"].export_data(f"./data/{settings.uid}")
+        state.segments.export_data(f"./data/{settings.uid}")
 
     save_btn = Button(
         label="Save progress", height=styles.NAV_BTN_HEIGHT, width_policy="min"
