@@ -24,13 +24,13 @@ from helpers import get_frame_from_cap, get_image_from_frame, update_sources
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
-from handle_jump_to_frame import handle_jump_to_frame
 import os
 import settings
 import session
 import state
 from event import subscribe, emit
 from navigation import create_navigation
+from tables import create_tabs, get_active_tab
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = state.trajectories
@@ -47,27 +47,6 @@ active_traj_type = None
 def clear_trajectories():
     trajectories.update_selected_data([], [])
     segments.update_selected_data([], [])
-    for table in TABLES.values():
-        table.source.selected.indices = []
-
-
-def update_stats():
-    return f"""
-Number of correct segments: {segments.get_correct_segment_count()}
-Number of incorrect segments: {segments.get_incorrect_segment_count()}
-Accuracy: {"{:.2f}".format(segments.get_correct_incorrect_ratio() * 100)}%
-    """
-
-
-def update_tables():
-    # TODO: Find better way for keeping track of the original index
-    # At least remove the direct access to the index
-    incorrect_segments_table_source.data = segments.get_segments_by_status(False)
-    incorrect_segments_table_source.data[
-        "original_index"
-    ] = segments.get_segments_by_status(False).index
-    correct_segments_table_source.data = segments.get_segments_by_status(True)
-    new_segments_table_source.data = segments.get_new_segments()
 
 
 def update_slider_limits():
@@ -104,10 +83,7 @@ def update_state():
 
 def handle_label_changed(new_frame):
     update_frame("", 0, new_frame)
-    update_tables()
     clear_trajectories()
-    # TODO: Remove dependency on stats
-    stats.text = update_stats()
 
 
 def update_frame(attr, old, frame_nr):
@@ -177,31 +153,13 @@ def handle_label_btn_click(label):
 
 
 def handle_reset_label():
-    table = TABLES[tabs.tabs[tabs.active].name]
+    table = get_active_tab()
     indices = table.source.selected.indices
     ids = []
     for i in indices:
         ids.append(table.source.data["id"][i])
     segments.set_status(status=None, comments="", ids=ids)
-    table.source.selected._callbacks = {}
-    table.source.selected.indices = []
-    table.source.selected.on_change("indices", handle_table_row_clicked(table))
     emit("label_changed", new_frame=state.current_frame)
-
-
-def handle_table_row_clicked(table):
-    def callback(_, old, new):
-        if new:
-            frame = table.source.data["frame_in"][new[0]]
-            handle_jump_to_frame("", 0, frame)
-
-    return callback
-
-
-def handle_tab_switched(attr, old, new):
-    reset_tables = ["wrong_segments", "correct_segments", "new_segments"]
-    reset_label_btn.visible = tabs.tabs[new].name in reset_tables
-    tab_description.text = descriptions[tabs.tabs[new].name]
 
 
 def handle_minute_changed(value):
@@ -257,6 +215,13 @@ connect_btn.on_click(handle_connect)
 reset_label_btn = Button(label="Reset label", visible=False)
 reset_label_btn.on_click(handle_reset_label)
 
+
+def update_reset_btn_state(state):
+    reset_label_btn.visible = state
+
+
+subscribe("tab_switched", update_reset_btn_state)
+
 # Wrong connection component
 incorrect_btn = Button(label="Incorrect segment", **btn_settings)
 incorrect_btn.on_click(handle_label_btn_click(False))
@@ -281,99 +246,11 @@ labeling_controls = [
     incorrect_comment,
 ]
 
-# Stats
-stats = PreText(text=update_stats())
-
-# Settings for all tables
-columns = [
-    TableColumn(field=c, title=c) for c in ["id", "frame_in", "frame_out", "class"]
-]
-table_params = {
-    "columns": columns,
-    "index_position": None,
-    "height": 250,
-    "width": 550,
-}
-
-# Incorrect segments component
-incorrect_segments_table_source = ColumnDataSource(
-    segments.get_segments_by_status(False)
-)
-incorrect_segments_table = DataTable(
-    source=incorrect_segments_table_source,
-    **{key: table_params[key] for key in table_params if key != "columns"},
-    columns=[*columns, TableColumn(field="comments", title="comments")],
-)
-incorrect_segments_table_source.selected.on_change(
-    "indices", handle_table_row_clicked(incorrect_segments_table)
-)
-
-# Candidates table
-# TODO: Add euclidean distance
-trajectories_table = DataTable(source=trajectories.get_source(), **table_params)
-
-# New segments table
-new_segments_table_source = ColumnDataSource(segments.get_new_segments())
-new_segments_table = DataTable(source=new_segments_table_source, **table_params)
-new_segments_table_source.selected.on_change(
-    "indices", handle_table_row_clicked(new_segments_table)
-)
-
-# Correct segments table
-correct_segments_table_source = ColumnDataSource(segments.get_segments_by_status(True))
-correct_segments_table = DataTable(source=correct_segments_table_source, **table_params)
-correct_segments_table_source.selected.on_change(
-    "indices", handle_table_row_clicked(correct_segments_table)
-)
-
-descriptions = {
-    "trajectories": "Trajectories/candidates on current frame. Click a trajectory to select it:",
-    "wrong_segments": "Wrong segments:",
-    "correct_segments": "Correct segments:",
-    "new_segments": "Manually created segments:",
-    "current_selection": "Currently selected trajectories:",
-    "stats": "",
-}
-trajectories_tab = Panel(
-    child=trajectories_table, title="Current frame", name="trajectories"
-)
-wrong_segments_tab = Panel(
-    child=incorrect_segments_table, title="Wrong segments", name="wrong_segments"
-)
-correct_segments_tab = Panel(
-    child=correct_segments_table, title="Correct segments", name="correct_segments"
-)
-new_segments_tab = Panel(
-    child=new_segments_table, title="New segments", name="new_segments"
-)
-
-stats_tab = Panel(child=stats, title="Statistics", name="stats")
-tab_description = Paragraph(text=descriptions["trajectories"])
-tabs = Tabs(
-    tabs=[
-        trajectories_tab,
-        correct_segments_tab,
-        wrong_segments_tab,
-        new_segments_tab,
-        stats_tab,
-    ],
-    height=280,
-)
-tabs.on_change("active", handle_tab_switched)
-
 # TODO: Find a good place for this
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
 trajectories.get_source().selected.on_change("indices", handle_tap(trajectories))
 segments.get_source().selected.on_change("indices", handle_tap(segments))
-
-
-TABLES = {
-    "trajectories": trajectories_table,
-    "wrong_segments": incorrect_segments_table,
-    "correct_segments": correct_segments_table,
-    "new_segments": new_segments_table,
-}
 
 BUTTONS = [reset_select_btn, connect_btn, incorrect_btn, correct_btn]
 
@@ -390,10 +267,7 @@ navigation_btns = row(
     session.save_progress(),
 )
 navigation = column(slider_row, jump_to, navigation_btns)
-table_tabs = column(
-    tab_description,
-    tabs,
-)
+table_tabs = column(*create_tabs())
 labeling_controls = column(
     table_tabs,
     reset_label_btn,
