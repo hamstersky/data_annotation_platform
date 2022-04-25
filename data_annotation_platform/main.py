@@ -102,48 +102,52 @@ def update_state():
 # ===============
 
 
+def handle_label_changed(new_frame):
+    update_frame("", 0, new_frame)
+    update_tables()
+    clear_trajectories()
+    # TODO: Remove dependency on stats
+    stats.text = update_stats()
+
+
 def update_frame(attr, old, frame_nr):
     frame = get_frame_from_cap(cap, frame_nr)
     img = get_image_from_frame(frame)
     plot.update_img(img)
     update_sources([trajectories, segments], frame_nr)
-    clear_trajectories()
 
 
-def bind_cb_obj(trigger):
+def handle_tap(trigger):
     def callback(_, old, new):
         # Temporarily remove callback to prevent infinite triggers as the
         # callback itself changes the value of the trigger
         trigger.get_source().selected._callbacks = {}
-        tap_handler(trigger, old, new)
-        trigger.get_source().selected.on_change("indices", bind_cb_obj(trigger))
+        if len(new) > 0:
+            selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
+            if (
+                isinstance(trigger, TrajectoriesData)
+                and not trigger.get_selected_trajectories()
+            ):
+                trigger.update_source_candidates(selected_traj_id)
+                # Needed so that the first trajectory remains the selected one
+                trigger.update_selected_data(old, [0])
+            else:
+                trigger.update_selected_data(old, new)
+        else:
+            clear_trajectories()
+            # TODO: Other way to get the slider value? Maybe consider the current
+            # frame to be some global variable or instance variable of plot class or
+            # some other new class?
+            # Restores state without candidate trajectories
+            update_sources([trajectories], state.current_frame)
+        update_state()
+        # Restore the callback
+        trigger.get_source().selected.on_change("indices", handle_tap(trigger))
 
     return callback
 
 
-def tap_handler(trigger, old, new):
-    if len(new) > 0:
-        selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
-        if (
-            isinstance(trigger, TrajectoriesData)
-            and not trigger.get_selected_trajectories()
-        ):
-            trigger.update_source_candidates(selected_traj_id)
-            # Needed so that the first trajectory remains the selected one
-            trigger.update_selected_data(old, [0])
-        else:
-            trigger.update_selected_data(old, new)
-    else:
-        clear_trajectories()
-        # TODO: Other way to get the slider value? Maybe consider the current
-        # frame to be some global variable or instance variable of plot class or
-        # some other new class?
-        # Restores state without candidate trajectories
-        update_sources([trajectories], state.current_frame)
-    update_state()
-
-
-def connect_handler():
+def handle_connect():
     # TODO: Make a connect method that connects a list of ids
     # Can't be part of segments as it doesn't have access to the whole data
     # Creates segments needed to connect the supplied trajectories (ids)
@@ -152,44 +156,27 @@ def connect_handler():
     pairs = [tuple(map(int, x)) for x in zip(ids, ids[1:])]
     new_frame = 0
     for t1_ID, t2_ID in pairs:
-        # TODO: Replace the iloc call
         t1 = trajectories.get_trajectory_by_id(t1_ID)
         t2 = trajectories.get_trajectory_by_id(t2_ID)
         # TODO: Consider the append being an internal call. Possibly still return the segment
         segment = segments.create_segment(t1, t2)
         segments.append_segment(segment)
-        new_frame = segment["frame_out"]
-    update_tables()
-    clear_trajectories()
-    # TODO: Figure out if there's a better way to update the plot
-    # Jump to the frame_out value of the added segment
-    update_frame("", 0, int(new_frame))
+        new_frame = int(segment["frame_out"])
+    emit("label_changed", new_frame=new_frame)
 
 
-def label_handler(label):
+subscribe("label_changed", handle_label_changed)
+
+
+def handle_label_btn_click(label):
     def callback():
-        global table_source
         segments.set_status(status=label, comments=incorrect_comment.value)
-        # TODO: Figure out if there's a better way to update the plot
-        update_frame("", 0, state.current_frame)
-        clear_trajectories()
-        stats.text = update_stats()
-        update_tables()
+        emit("label_changed", new_frame=state.current_frame)
 
     return callback
 
 
-def wrong_handler():
-    global table_source
-    segments.set_status(status=False, comments=incorrect_comment.value)
-    # TODO: Figure out if there's a better way to update the plot
-    update_frame("", 0, state.current_frame)
-    clear_trajectories()
-    stats.text = update_stats()
-    update_tables()
-
-
-def reset_label():
+def handle_reset_label():
     table = TABLES[tabs.tabs[tabs.active].name]
     indices = table.source.selected.indices
     ids = []
@@ -198,13 +185,11 @@ def reset_label():
     segments.set_status(status=None, comments="", ids=ids)
     table.source.selected._callbacks = {}
     table.source.selected.indices = []
-    table.source.selected.on_change("indices", table_click_handler(table))
-    update_tables()
-    stats.text = update_stats()
-    update_frame("", 0, state.current_frame)
+    table.source.selected.on_change("indices", handle_table_row_clicked(table))
+    emit("label_changed", new_frame=state.current_frame)
 
 
-def table_click_handler(table):
+def handle_table_row_clicked(table):
     def callback(_, old, new):
         if new:
             frame = table.source.data["frame_in"][new[0]]
@@ -213,7 +198,7 @@ def table_click_handler(table):
     return callback
 
 
-def tab_switch(attr, old, new):
+def handle_tab_switched(attr, old, new):
     reset_tables = ["wrong_segments", "correct_segments", "new_segments"]
     reset_label_btn.visible = tabs.tabs[new].name in reset_tables
     tab_description.text = descriptions[tabs.tabs[new].name]
@@ -266,15 +251,15 @@ subscribe("frame_updated", update_slider)
 
 btn_settings = {"disabled": True}
 connect_btn = Button(label="Connect", **btn_settings)
-connect_btn.on_click(connect_handler)
+connect_btn.on_click(handle_connect)
 
 # Restore segment button
 reset_label_btn = Button(label="Reset label", visible=False)
-reset_label_btn.on_click(reset_label)
+reset_label_btn.on_click(handle_reset_label)
 
 # Wrong connection component
 incorrect_btn = Button(label="Incorrect segment", **btn_settings)
-incorrect_btn.on_click(label_handler(False))
+incorrect_btn.on_click(handle_label_btn_click(False))
 incorrect_options = ["reason1", "reason2"]
 incorrect_comment = MultiChoice(
     options=incorrect_options,
@@ -283,7 +268,7 @@ incorrect_comment = MultiChoice(
 )
 
 correct_btn = Button(label="Correct segment", **btn_settings)
-correct_btn.on_click(label_handler(True))
+correct_btn.on_click(handle_label_btn_click(True))
 
 reset_select_btn = Button(label="Reset selection")
 reset_select_btn.on_click(clear_trajectories)
@@ -320,7 +305,7 @@ incorrect_segments_table = DataTable(
     columns=[*columns, TableColumn(field="comments", title="comments")],
 )
 incorrect_segments_table_source.selected.on_change(
-    "indices", table_click_handler(incorrect_segments_table)
+    "indices", handle_table_row_clicked(incorrect_segments_table)
 )
 
 # Candidates table
@@ -331,14 +316,14 @@ trajectories_table = DataTable(source=trajectories.get_source(), **table_params)
 new_segments_table_source = ColumnDataSource(segments.get_new_segments())
 new_segments_table = DataTable(source=new_segments_table_source, **table_params)
 new_segments_table_source.selected.on_change(
-    "indices", table_click_handler(new_segments_table)
+    "indices", handle_table_row_clicked(new_segments_table)
 )
 
 # Correct segments table
 correct_segments_table_source = ColumnDataSource(segments.get_segments_by_status(True))
 correct_segments_table = DataTable(source=correct_segments_table_source, **table_params)
 correct_segments_table_source.selected.on_change(
-    "indices", table_click_handler(correct_segments_table)
+    "indices", handle_table_row_clicked(correct_segments_table)
 )
 
 descriptions = {
@@ -374,13 +359,13 @@ tabs = Tabs(
     ],
     height=280,
 )
-tabs.on_change("active", tab_switch)
+tabs.on_change("active", handle_tab_switched)
 
 # TODO: Find a good place for this
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
-trajectories.get_source().selected.on_change("indices", bind_cb_obj(trajectories))
-segments.get_source().selected.on_change("indices", bind_cb_obj(segments))
+trajectories.get_source().selected.on_change("indices", handle_tap(trajectories))
+segments.get_source().selected.on_change("indices", handle_tap(segments))
 
 
 TABLES = {
