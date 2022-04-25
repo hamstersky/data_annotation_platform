@@ -33,7 +33,7 @@ from event import subscribe, emit
 from navigation import create_navigation
 
 cap = cv2.VideoCapture("./videos/video.m4v")
-trajectories = TrajectoriesData("./data/broken_trajectories.pkl")
+trajectories = state.trajectories
 segments = state.segments
 plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))

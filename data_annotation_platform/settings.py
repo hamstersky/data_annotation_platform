@@ -1,3 +1,2 @@
 segments_path = "./data/segments.pkl"
-uid = 0
-data = {}
+trajectories_path = "./data/broken_trajectories.pkl"

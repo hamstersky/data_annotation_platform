@@ -13,7 +13,7 @@ def save_progress():
     store_cookie_trigger = PreText(text="", visible=False)
 
     store_cookie = CustomJS(
-        args=dict(uid=settings.uid),
+        args=dict(uid=state.uid),
         code="""
             document.cookie = "uid=" + uid + ";max-age=31536000;SameSite=Strict"
         """,
@@ -23,7 +23,7 @@ def save_progress():
     def save():
         # Trigger the callback
         store_cookie_trigger.text = f"{store_cookie_trigger.text}1"
-        state.segments.export_data(f"./data/{settings.uid}")
+        state.segments.export_data(f"./data/{state.uid}")
 
     save_btn = Button(
         label="Save progress", height=styles.NAV_BTN_HEIGHT, width_policy="min"
