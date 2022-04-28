@@ -36,6 +36,7 @@ class TrajectoryPlot:
             active_tap="auto",
             x_range=(0, self.cap_w),
             y_range=(0, self.cap_h),
+            name="plot",
         )
         p.toolbar.logo = None
         p.grid.visible = False

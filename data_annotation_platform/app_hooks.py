@@ -2,6 +2,7 @@ import settings
 import state
 import os
 import uuid
+import cv2
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 
@@ -18,3 +19,4 @@ def on_session_created(session_context):
         state.uid = str(uuid.uuid4())
     state.segments = SegmentsData(settings.segments_path)
     state.trajectories = TrajectoriesData(settings.trajectories_path)
+    state.cap = cv2.VideoCapture("./videos/video.m4v")

@@ -21,7 +21,7 @@ from bokeh.models import (
 from bokeh.palettes import RdYlBu3
 from bokeh.plotting import curdoc, figure
 
-from helpers import get_frame_from_cap, get_image_from_frame, update_sources
+from helpers import clear_trajectories, update_state, update_frame, update_sources
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
@@ -33,57 +33,21 @@ from event import subscribe, emit
 from navigation import create_navigation
 from tables import create_tabs
 from handle_jump_to_frame import update_slider_limits
+from labeling import create_labeling_controls
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = state.trajectories
 segments = state.segments
 plot = TrajectoryPlot(trajectories, segments)
+state.plot = plot
 capture_width = int(cap.get(3))
 state.total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 active_traj_type = None
-
-# ===============
-# Helpers
-# ===============
-def clear_trajectories():
-    trajectories.update_selected_data([], [])
-    segments.update_selected_data([], [])
-
-
-def update_state():
-    if len(trajectories.get_selected_trajectories()) > 1:
-        connect_btn.disabled = False
-        incorrect_btn.disabled = True
-        incorrect_comment.visible = False
-        correct_btn.disabled = True
-    elif segments.get_selected_trajectories():
-        connect_btn.disabled = True
-        incorrect_btn.disabled = False
-        incorrect_comment.visible = True
-        correct_btn.disabled = False
-    else:
-        connect_btn.disabled = True
-        incorrect_btn.disabled = True
-        incorrect_comment.visible = False
-        correct_btn.disabled = True
 
 
 # ===============
 # Callbacks
 # ===============
-
-
-def handle_label_changed(new_frame):
-    update_frame("", 0, new_frame)
-    clear_trajectories()
-    segments.update_sources()
-
-
-def update_frame(attr, old, frame_nr):
-    frame = get_frame_from_cap(cap, frame_nr)
-    img = get_image_from_frame(frame)
-    plot.update_img(img)
-    update_sources([trajectories, segments], frame_nr)
 
 
 def handle_tap(trigger):
@@ -114,42 +78,6 @@ def handle_tap(trigger):
         trigger.get_source().selected.on_change("indices", handle_tap(trigger))
 
     return callback
-
-
-def handle_connect():
-    # TODO: Make a connect method that connects a list of ids
-    # Can't be part of segments as it doesn't have access to the whole data
-    # Creates segments needed to connect the supplied trajectories (ids)
-    # Connections will be done in the order of the supplied ids
-    ids = trajectories.get_selected_trajectories()
-    pairs = [tuple(map(int, x)) for x in zip(ids, ids[1:])]
-    new_frame = 0
-    for t1_ID, t2_ID in pairs:
-        t1 = trajectories.get_trajectory_by_id(t1_ID)
-        t2 = trajectories.get_trajectory_by_id(t2_ID)
-        # TODO: Consider the append being an internal call. Possibly still return the segment
-        segment = segments.create_segment(t1, t2)
-        segments.append_segment(segment)
-        new_frame = int(segment["frame_out"])
-        handle_label_changed(new_frame)
-
-
-def handle_label_btn_click(label):
-    def callback():
-        segments.set_status(status=label, comments=incorrect_comment.value)
-        handle_label_changed(state.current_frame)
-
-    return callback
-
-
-def handle_reset_label():
-    table = state.active_table
-    indices = table.source.selected.indices
-    ids = []
-    for i in indices:
-        ids.append(table.source.data["id"][i])
-    segments.set_status(status=None, comments="", ids=ids)
-    handle_label_changed(state.current_frame)
 
 
 def handle_minute_changed(value):
@@ -191,48 +119,12 @@ slider_component = [
     [prev_min_btn, slider, next_min_btn],
 ]
 
-label_btn_settings = {"disabled": True, "tags": ["labeling"]}
-connect_btn = Button(label="Connect", **label_btn_settings)
-connect_btn.on_click(handle_connect)
-
-# Restore segment button
-reset_label_btn = Button(label="Reset label", name="reset-btn", visible=False)
-reset_label_btn.on_click(handle_reset_label)
-
-# Wrong connection component
-incorrect_btn = Button(label="Incorrect segment", **label_btn_settings)
-incorrect_btn.on_click(handle_label_btn_click(False))
-incorrect_options = ["reason1", "reason2"]
-incorrect_comment = MultiChoice(
-    options=incorrect_options,
-    visible=False,
-    title="Select the reason(s) why the connection is incorrect by clicking on the input box.",
-)
-
-correct_btn = Button(label="Correct segment", **label_btn_settings)
-correct_btn.on_click(handle_label_btn_click(True))
-
-reset_select_btn = Button(label="Reset selection")
-reset_select_btn.on_click(clear_trajectories)
-
-labeling_controls = [
-    reset_select_btn,
-    connect_btn,
-    correct_btn,
-    incorrect_btn,
-    incorrect_comment,
-]
 
 # TODO: Find a good place for this
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
 trajectories.get_source().selected.on_change("indices", handle_tap(trajectories))
 segments.get_source().selected.on_change("indices", handle_tap(segments))
-
-BUTTONS = [reset_select_btn, connect_btn, incorrect_btn, correct_btn]
-
-for btn in BUTTONS:
-    btn.on_click(update_state)
 
 # Setup initial frame
 update_frame("", 1, 1)
@@ -245,15 +137,7 @@ navigation_btns = row(
 )
 navigation = column(slider_row, jump_to, navigation_btns)
 table_tabs = column(*create_tabs())
-labeling_controls = column(
-    table_tabs,
-    reset_label_btn,
-    reset_select_btn,
-    connect_btn,
-    correct_btn,
-    incorrect_btn,
-    incorrect_comment,
-)
+labeling_controls = column(table_tabs, *create_labeling_controls())
 curdoc().add_root(row(plot.plot, labeling_controls))
 curdoc().add_root(navigation)
 
