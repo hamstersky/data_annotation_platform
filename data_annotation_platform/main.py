@@ -32,6 +32,7 @@ import state
 from event import subscribe, emit
 from navigation import create_navigation
 from tables import create_tabs
+from handle_jump_to_frame import update_slider_limits
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = state.trajectories
@@ -39,7 +40,6 @@ segments = state.segments
 plot = TrajectoryPlot(trajectories, segments)
 capture_width = int(cap.get(3))
 state.total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-FRAME_INTERVAL = 1800
 active_traj_type = None
 
 # ===============
@@ -48,15 +48,6 @@ active_traj_type = None
 def clear_trajectories():
     trajectories.update_selected_data([], [])
     segments.update_selected_data([], [])
-
-
-def update_slider_limits():
-    max_minute = state.total_frames // 60 // 30
-    slider.start = state.current_minute * FRAME_INTERVAL
-    if state.current_minute == max_minute:
-        slider.end = state.total_frames - 1
-    else:
-        slider.end = (state.current_minute + 1) * FRAME_INTERVAL
 
 
 def update_state():
@@ -173,12 +164,6 @@ def handle_minute_changed(value):
     return callback
 
 
-def update_slider():
-    update_slider_limits()
-    slider.value = state.current_frame
-    update_frame("", 0, state.current_frame)
-
-
 # ===============
 # Widgets / Layout
 # ===============
@@ -188,7 +173,7 @@ def update_slider():
 # For preventing going over the last frame
 slider = Slider(
     start=0,
-    end=FRAME_INTERVAL,
+    end=settings.FRAME_INTERVAL,
     value=1,
     step=1,
     width=plot.plot.width - 150,
