@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from data import Data
+from bokeh.models import ColumnDataSource
 
 
 class SegmentsData(Data):
@@ -16,6 +17,10 @@ class SegmentsData(Data):
             # For keeping track of new segments added in the annotation tool
             self.data["new"] = False
             self.data["comments"] = ""
+
+        self.incorrect_source = ColumnDataSource(self.get_segments_by_status(False))
+        self.correct_source = ColumnDataSource(self.get_segments_by_status(True))
+        self.new_source = ColumnDataSource(self.get_new_segments())
 
     def get_frame_subset(self, frame_nr):
         return self.data[
@@ -91,3 +96,20 @@ class SegmentsData(Data):
         line_color = [colors[i] for i in subset["correct"]]
         line_dash = [line_style[i] for i in subset["correct"]]
         return dict(line_color=line_color, line_dash=line_dash)
+
+    def update_sources(self):
+        incorrect = self.get_segments_by_status(False)
+        correct = self.get_segments_by_status(True)
+        new = self.get_new_segments()
+        self.incorrect_source.data = {
+            **incorrect.to_dict(orient="list"),
+            "id": incorrect.index.values,
+        }
+        self.correct_source.data = {
+            **correct.to_dict(orient="list"),
+            "id": correct.index.values,
+        }
+        self.new_source.data = {
+            **new.to_dict(orient="list"),
+            "id": new.index.values,
+        }

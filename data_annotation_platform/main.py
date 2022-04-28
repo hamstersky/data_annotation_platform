@@ -1,3 +1,4 @@
+from turtle import update
 import cv2, uuid
 import numpy as np
 import pandas as pd
@@ -30,7 +31,7 @@ import session
 import state
 from event import subscribe, emit
 from navigation import create_navigation
-from tables import create_tabs, get_active_tab
+from tables import create_tabs
 
 cap = cv2.VideoCapture("./videos/video.m4v")
 trajectories = state.trajectories
@@ -84,6 +85,7 @@ def update_state():
 def handle_label_changed(new_frame):
     update_frame("", 0, new_frame)
     clear_trajectories()
+    segments.update_sources()
 
 
 def update_frame(attr, old, frame_nr):
@@ -138,28 +140,25 @@ def handle_connect():
         segment = segments.create_segment(t1, t2)
         segments.append_segment(segment)
         new_frame = int(segment["frame_out"])
-    emit("label_changed", new_frame=new_frame)
-
-
-subscribe("label_changed", handle_label_changed)
+        handle_label_changed(new_frame)
 
 
 def handle_label_btn_click(label):
     def callback():
         segments.set_status(status=label, comments=incorrect_comment.value)
-        emit("label_changed", new_frame=state.current_frame)
+        handle_label_changed(state.current_frame)
 
     return callback
 
 
 def handle_reset_label():
-    table = get_active_tab()
+    table = state.active_table
     indices = table.source.selected.indices
     ids = []
     for i in indices:
         ids.append(table.source.data["id"][i])
     segments.set_status(status=None, comments="", ids=ids)
-    emit("label_changed", new_frame=state.current_frame)
+    handle_label_changed(state.current_frame)
 
 
 def handle_minute_changed(value):
@@ -194,6 +193,7 @@ slider = Slider(
     step=1,
     width=plot.plot.width - 150,
     margin=(0, 15, 0, 15),
+    name="slider",
 )
 slider.on_change("value", update_frame)
 next_min_btn = Button(label="+1min", width=50)
@@ -205,25 +205,17 @@ slider_component = [
     Paragraph(text="Use the slider to change frames:"),
     [prev_min_btn, slider, next_min_btn],
 ]
-subscribe("frame_updated", update_slider)
 
-btn_settings = {"disabled": True}
-connect_btn = Button(label="Connect", **btn_settings)
+label_btn_settings = {"disabled": True, "tags": ["labeling"]}
+connect_btn = Button(label="Connect", **label_btn_settings)
 connect_btn.on_click(handle_connect)
 
 # Restore segment button
-reset_label_btn = Button(label="Reset label", visible=False)
+reset_label_btn = Button(label="Reset label", name="reset-btn", visible=False)
 reset_label_btn.on_click(handle_reset_label)
 
-
-def update_reset_btn_state(state):
-    reset_label_btn.visible = state
-
-
-subscribe("tab_switched", update_reset_btn_state)
-
 # Wrong connection component
-incorrect_btn = Button(label="Incorrect segment", **btn_settings)
+incorrect_btn = Button(label="Incorrect segment", **label_btn_settings)
 incorrect_btn.on_click(handle_label_btn_click(False))
 incorrect_options = ["reason1", "reason2"]
 incorrect_comment = MultiChoice(
@@ -232,7 +224,7 @@ incorrect_comment = MultiChoice(
     title="Select the reason(s) why the connection is incorrect by clicking on the input box.",
 )
 
-correct_btn = Button(label="Correct segment", **btn_settings)
+correct_btn = Button(label="Correct segment", **label_btn_settings)
 correct_btn.on_click(handle_label_btn_click(True))
 
 reset_select_btn = Button(label="Reset selection")
