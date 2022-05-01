@@ -32,8 +32,8 @@ import state
 from event import subscribe, emit
 from navigation import create_navigation
 from tables import create_tabs
-from handle_jump_to_frame import update_slider_limits
 from labeling import create_labeling_controls
+from slider import create_slider
 
 
 def initialize_state():
@@ -86,46 +86,6 @@ def handle_tap(trigger):
     return callback
 
 
-def handle_minute_changed(value):
-    def callback():
-        max_minute = state.total_frames // 60 // 30
-        next_minute = state.current_minute + value
-        if next_minute >= 0 and next_minute <= max_minute:
-            state.current_minute += value
-            update_slider_limits()
-            slider.value = slider.end if value < 0 else slider.start
-
-    return callback
-
-
-# ===============
-# Widgets / Layout
-# ===============
-
-
-# Slider
-# For preventing going over the last frame
-slider = Slider(
-    start=0,
-    end=settings.FRAME_INTERVAL,
-    value=1,
-    step=1,
-    width=state.plot.plot.width - 150,
-    margin=(0, 15, 0, 15),
-    name="slider",
-)
-slider.on_change("value", update_frame)
-next_min_btn = Button(label="+1min", width=50)
-next_min_btn.on_click(handle_minute_changed(1))
-prev_min_btn = Button(label="-1min", width=50)
-prev_min_btn.on_click(handle_minute_changed(-1))
-
-slider_component = [
-    Paragraph(text="Use the slider to change frames:"),
-    [prev_min_btn, slider, next_min_btn],
-]
-
-
 # TODO: Find a good place for this
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
@@ -135,7 +95,7 @@ segments.get_source().selected.on_change("indices", handle_tap(segments))
 # Setup initial frame
 update_frame("", 1, 1)
 
-slider_row = row(prev_min_btn, slider, next_min_btn)
+slider_row = row(create_slider())
 jump_to, *btns = create_navigation()
 navigation_btns = row(
     *btns,
