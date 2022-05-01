@@ -25,9 +25,7 @@ def save_progress():
         store_cookie_trigger.text = f"{store_cookie_trigger.text}1"
         state.segments.export_data(f"./data/{state.uid}")
 
-    save_btn = Button(
-        label="Save progress", height=styles.NAV_BTN_HEIGHT, width_policy="min"
-    )
+    save_btn = Button(label="Save progress", margin=(100, 0, 0, 0))
     save_btn.on_click(save)
     curdoc().add_periodic_callback(save, 60000)
     return save_btn
