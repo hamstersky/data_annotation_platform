@@ -1,35 +1,13 @@
-from turtle import update
-import cv2, uuid
-import numpy as np
-import pandas as pd
-from bokeh.events import Tap
-from bokeh.layouts import column, layout, row
-from bokeh.models import (
-    Button,
-    ColumnDataSource,
-    CustomJS,
-    DataTable,
-    MultiChoice,
-    NumericInput,
-    Panel,
-    Paragraph,
-    PreText,
-    Slider,
-    TableColumn,
-    Tabs,
-)
-from bokeh.palettes import RdYlBu3
-from bokeh.plotting import curdoc, figure
-
+import cv2
+from bokeh.layouts import column, row
+from bokeh.plotting import curdoc
 from helpers import clear_trajectories, update_state, update_frame, update_sources
 from segments_data import SegmentsData
 from trajectories_data import TrajectoriesData
 from trajectory_plot import TrajectoryPlot
-import os
 import settings
 import session
 import state
-from event import subscribe, emit
 from navigation import create_navigation
 from tables import create_tabs
 from labeling import create_labeling_controls
@@ -74,9 +52,6 @@ def handle_tap(trigger):
                 trigger.update_selected_data(old, new)
         else:
             clear_trajectories()
-            # TODO: Other way to get the slider value? Maybe consider the current
-            # frame to be some global variable or instance variable of plot class or
-            # some other new class?
             # Restores state without candidate trajectories
             update_sources([trajectories], state.current_frame)
         update_state()
@@ -106,31 +81,3 @@ table_tabs = column(*create_tabs())
 labeling_controls = column(table_tabs, *create_labeling_controls())
 curdoc().add_root(row(state.plot.plot, labeling_controls))
 curdoc().add_root(navigation)
-
-# Create layout
-# curdoc().add_root(
-#     layout(
-#         [
-#             [
-#                 plot.plot,
-#                 [
-#                     tab_description,
-#                     tabs,
-#                     reset_label_btn,
-#                     *labeling_controls,
-#                 ],
-#             ],
-#             *slider_component,
-#             jump_to,
-#             [
-#                 second_backward,
-#                 previous_frame,
-#                 next_frame,
-#                 second_forward,
-#                 next_interest,
-#                 save_btn,
-#             ],
-#             store_cookie_trigger,
-#         ]
-#     )
-# )
