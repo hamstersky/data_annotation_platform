@@ -12,6 +12,7 @@ from navigation import create_navigation
 from tables import create_tabs
 from labeling import create_labeling_controls
 from slider import create_slider
+from data_export import create_download_btn
 
 
 def initialize_state():
@@ -71,11 +72,14 @@ segments.get_source().selected.on_change("indices", handle_tap(segments))
 update_frame("", 1, 1)
 
 save_btn = session.save_progress()
+download_btn = create_download_btn()
 slider_row = row(create_slider())
 jump_to, *btns = create_navigation()
 navigation_btns = row(*btns)
 navigation = column(slider_row, jump_to, navigation_btns)
 table_tabs = column(*create_tabs())
-labeling_controls = column(table_tabs, *create_labeling_controls(), save_btn)
+labeling_controls = column(
+    table_tabs, *create_labeling_controls(), save_btn, download_btn
+)
 curdoc().add_root(row(state.plot.plot, labeling_controls))
 curdoc().add_root(navigation)
