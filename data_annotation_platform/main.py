@@ -35,15 +35,21 @@ from tables import create_tabs
 from handle_jump_to_frame import update_slider_limits
 from labeling import create_labeling_controls
 
-cap = cv2.VideoCapture("./videos/video.m4v")
+
+def initialize_state():
+    state.segments = SegmentsData(settings.segments_path)
+    state.trajectories = TrajectoriesData(settings.trajectories_path)
+    state.current_frame = 0
+    state.current_minute = 0
+    state.cap = cv2.VideoCapture("./videos/video.m4v")
+    state.total_frames = int(state.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    state.plot = TrajectoryPlot(state.trajectories, state.segments)
+
+
+initialize_state()
+
 trajectories = state.trajectories
 segments = state.segments
-plot = TrajectoryPlot(trajectories, segments)
-state.plot = plot
-capture_width = int(cap.get(3))
-state.total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-active_traj_type = None
-
 
 # ===============
 # Callbacks
@@ -104,7 +110,7 @@ slider = Slider(
     end=settings.FRAME_INTERVAL,
     value=1,
     step=1,
-    width=plot.plot.width - 150,
+    width=state.plot.plot.width - 150,
     margin=(0, 15, 0, 15),
     name="slider",
 )
@@ -138,9 +144,8 @@ navigation_btns = row(
 navigation = column(slider_row, jump_to, navigation_btns)
 table_tabs = column(*create_tabs())
 labeling_controls = column(table_tabs, *create_labeling_controls())
-curdoc().add_root(row(plot.plot, labeling_controls))
+curdoc().add_root(row(state.plot.plot, labeling_controls))
 curdoc().add_root(navigation)
-
 
 # Create layout
 # curdoc().add_root(
