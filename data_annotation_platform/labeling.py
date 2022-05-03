@@ -57,7 +57,15 @@ def create_labeling_controls():
         label="Incorrect segment", tags=segments_labeling_tags, **label_btn_settings
     )
     incorrect_btn.on_click(handle_label_btn_click(False))
-    incorrect_options = ["reason1", "reason2"]
+    incorrect_options = [
+        "lack of good connection",
+        "large distance",
+        "illegal maneuver",
+        "wrong direction",
+        "parked vehicle",
+        "object misclassification",
+        "other",
+    ]
     incorrect_comment = MultiChoice(
         options=incorrect_options,
         visible=False,
