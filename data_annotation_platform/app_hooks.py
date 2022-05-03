@@ -18,3 +18,4 @@ def on_session_created(session_context):
             settings.segments_path = path
     else:
         state.uid = str(uuid.uuid4())
+        settings.segments_path = "./data/segments.pkl"
