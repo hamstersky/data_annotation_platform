@@ -83,6 +83,9 @@ class SegmentsData(Data):
     def get_new_segments(self):
         return self.data[self.data["new"] == True]
 
+    def get_new_segments_count(self):
+        return self.data[(self.data["new"] == True)].shape[0]
+
     def find_next_interest(self, frame_nr):
         return int(
             self.data[
