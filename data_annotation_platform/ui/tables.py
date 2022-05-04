@@ -9,7 +9,7 @@ from bokeh.models import (
 from handle_jump_to_frame import handle_jump_to_frame
 from bokeh.plotting import curdoc
 
-import state
+import ui.state as state
 
 
 def create_tabs():

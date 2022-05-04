@@ -1,11 +1,11 @@
-from segments_data import SegmentsData
-from trajectories_data import TrajectoriesData
+from app.segments import Segments
+from app.trajectories import Trajectories
 from bokeh.models import DataTable
 import cv2
 import settings
 
-segments: SegmentsData
-trajectories: TrajectoriesData
+segments: Segments
+trajectories: Trajectories
 current_frame: int
 current_minute: int
 total_frames: int

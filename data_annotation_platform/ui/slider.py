@@ -1,7 +1,7 @@
 import settings
-import state
+import ui.state as state
 from handle_jump_to_frame import update_slider_limits
-from helpers import update_frame
+from app.helpers import update_frame
 from bokeh.models import Button, Slider
 
 

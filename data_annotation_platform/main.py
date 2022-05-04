@@ -1,23 +1,23 @@
 import cv2
 from bokeh.layouts import column, row
 from bokeh.plotting import curdoc
-from helpers import clear_trajectories, update_state, update_frame, update_sources
-from segments_data import SegmentsData
-from trajectories_data import TrajectoriesData
-from trajectory_plot import TrajectoryPlot
+from app.helpers import clear_trajectories, update_state, update_frame, update_sources
+from app.segments import Segments
+from app.trajectories import Trajectories
+from ui.trajectory_plot import TrajectoryPlot
 import settings
-import session
-import state
-from navigation import create_navigation
-from tables import create_tabs
-from labeling import create_labeling_controls
-from slider import create_slider
-from data_export import create_download_btn
+import ui.session as session
+import ui.state as state
+from ui.navigation import create_navigation
+from ui.tables import create_tabs
+from ui.labeling import create_labeling_controls
+from ui.slider import create_slider
+from ui.data_export import create_download_btn
 
 
 def initialize_state():
-    state.segments = SegmentsData(settings.segments_path)
-    state.trajectories = TrajectoriesData(settings.trajectories_path)
+    state.segments = Segments(settings.segments_path)
+    state.trajectories = Trajectories(settings.trajectories_path)
     state.current_frame = 0
     state.current_minute = 0
     state.cap = cv2.VideoCapture("./videos/video.m4v")
@@ -43,7 +43,7 @@ def handle_tap(trigger):
         if len(new) > 0:
             selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
             if (
-                isinstance(trigger, TrajectoriesData)
+                isinstance(trigger, Trajectories)
                 and not trigger.get_selected_trajectories()
             ):
                 trigger.update_source_candidates(selected_traj_id)

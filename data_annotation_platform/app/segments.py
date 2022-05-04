@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from data import Data
+from app.data_source import DataSource
 from bokeh.models import ColumnDataSource
 
 
-class SegmentsData(Data):
+class Segments(DataSource):
     def __init__(self, source_path):
         super().__init__(source_path)
 

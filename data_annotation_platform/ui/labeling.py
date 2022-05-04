@@ -1,6 +1,6 @@
 from bokeh.models import Button, MultiChoice
-import state
-from helpers import update_frame, clear_trajectories, update_state
+import ui.state as state
+from app.helpers import update_frame, clear_trajectories, update_state
 
 
 def create_labeling_controls():

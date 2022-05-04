@@ -1,7 +1,8 @@
 from bokeh.models import CustomJS, Button
 from bokeh.plotting import curdoc
 
-import state
+import settings
+import ui.state as state
 
 
 def save_progress():
@@ -16,7 +17,7 @@ def save_progress():
     def save():
         # Trigger JS script
         save_btn.name = f"{save_btn.name}1"
-        state.segments.export_data(f"./data/{state.uid}")
+        state.segments.export_data(f"{settings.project_path}/data/{state.uid}")
 
     save_btn = Button(label="Save progress", margin=(100, 0, 0, 0))
     save_btn.on_click(save)

@@ -1,6 +1,5 @@
-from event import emit
 from bokeh.plotting import curdoc
-import state
+import ui.state as state
 import settings
 
 

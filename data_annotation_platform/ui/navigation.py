@@ -1,7 +1,7 @@
 from bokeh.models import Button, NumericInput
 from handle_jump_to_frame import handle_jump_to_frame
-import state
-import styles
+import ui.state as state
+import ui.styles as styles
 
 
 def handle_frame_navigation(value):

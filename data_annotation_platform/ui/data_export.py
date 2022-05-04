@@ -1,6 +1,6 @@
 from bokeh.models import Button, ColumnDataSource, CustomJS
 import os
-import state
+import ui.state as state
 
 
 def create_download_btn():

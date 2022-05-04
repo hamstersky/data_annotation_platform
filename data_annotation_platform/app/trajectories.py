@@ -1,9 +1,9 @@
 import pandas as pd
 
-from data import Data
+from app.data_source import DataSource
 
 
-class TrajectoriesData(Data):
+class Trajectories(DataSource):
     def __init__(self, source_path):
         super().__init__(source_path)
 

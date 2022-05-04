@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import state
+import ui.state as state
 from bokeh.plotting import curdoc
 
 # ===============

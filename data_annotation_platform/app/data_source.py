@@ -1,10 +1,8 @@
-from dataclasses import dataclass
-
 import pandas as pd
 from bokeh.models import ColumnDataSource
 
 
-class Data:
+class DataSource:
     def __init__(self, source_path):
         self.data = pd.read_pickle(source_path)
         self.source = ColumnDataSource()

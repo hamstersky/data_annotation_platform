@@ -1,11 +1,7 @@
-import settings
-import state
 import os
 import uuid
-import cv2
-from segments_data import SegmentsData
-from trajectories_data import TrajectoriesData
-from trajectory_plot import TrajectoryPlot
+import settings
+import ui.state as state
 
 
 def on_session_created(session_context):
@@ -13,9 +9,9 @@ def on_session_created(session_context):
         uid = session_context.request._cookies["uid"]
         state.uid = uid
         filename = f"{uid}.pkl"
-        path = os.path.join(os.getcwd(), "data", filename)
+        path = f"{settings.project_path}/data/{filename}"
         if os.path.exists(path):
             settings.segments_path = path
     else:
         state.uid = str(uuid.uuid4())
-        settings.segments_path = "./data/segments.pkl"
+        settings.segments_path = f"{settings.project_path}/data/segments.pkl"
