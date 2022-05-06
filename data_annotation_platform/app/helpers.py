@@ -43,6 +43,7 @@ def update_frame(attr, old, frame_nr):
     img = get_image_from_frame(frame)
     # plot = curdoc().get_model_by_name("plot")
     state.plot.update_img(img)
+    state.current_frame = frame_nr
     update_sources([state.trajectories, state.segments], frame_nr)
 
 
