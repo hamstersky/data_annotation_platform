@@ -109,7 +109,7 @@ def create_tabs():
         )
         # The current_frame table doesn't need the same callbacks
         if name == "current_frame":
-            break
+            continue
         table.source.selected.on_change("indices", handle_table_row_clicked(table))
         # Update the stats when the data changes
         table.source.on_change("data", lambda attr, old, new: update_stats())
