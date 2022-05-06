@@ -5,8 +5,13 @@ from bokeh.models import ColumnDataSource
 class DataSource:
     def __init__(self, source_path):
         self.data = pd.read_pickle(source_path)
-        self.source = ColumnDataSource()
+        self.sources = []
+        self._register_source("source", {})
         self.selected_ids = []
+
+    def _register_source(self, name, data):
+        setattr(self, name, ColumnDataSource(data))
+        self.sources.append(getattr(self, name))
 
     def get_frame_subset(self, frame_nr):
         raise NotImplementedError
@@ -56,7 +61,8 @@ class DataSource:
     def update_selected_data(self, old, new):
         if new == []:
             self.selected_ids = []
-            self.source.selected.indices = []
+            for source in self.sources:
+                source.selected.indices = []
         else:
             # 'new' holds the index of the new selected data not the actual id
             # need to extract the id from the source data

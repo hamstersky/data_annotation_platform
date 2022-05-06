@@ -18,9 +18,9 @@ class Segments(DataSource):
             self.data["new"] = False
             self.data["comments"] = ""
 
-        self.incorrect_source = ColumnDataSource(self.get_segments_by_status(False))
-        self.correct_source = ColumnDataSource(self.get_segments_by_status(True))
-        self.new_source = ColumnDataSource(self.get_new_segments())
+        self._register_source("incorrect_source", self.get_segments_by_status(False))
+        self._register_source("correct_source", self.get_segments_by_status(True))
+        self._register_source("new_source", self.get_new_segments())
 
     def get_frame_subset(self, frame_nr):
         return self.data[
