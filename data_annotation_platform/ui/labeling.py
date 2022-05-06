@@ -20,11 +20,11 @@ def create_labeling_controls():
             handle_label_changed(new_frame)
 
     def handle_reset_label():
-        table = state.active_table
-        indices = table.source.selected.indices
         ids = []
-        for i in indices:
-            ids.append(table.source.data["id"][i])
+        # TODO: This could be replaced not to rely on the internals of segments if the currently selected ids are moved to state
+        for source in state.segments.sources:
+            for i in source.selected.indices:
+                ids.append(source.data["id"][i])
         state.segments.set_status(status=None, comments="", ids=ids)
         handle_label_changed(state.current_frame)
 
