@@ -45,6 +45,7 @@ def update_frame(attr, old, frame_nr):
     state.plot.update_img(img)
     state.current_frame = frame_nr
     update_sources([state.trajectories, state.segments], frame_nr)
+    clear_trajectories()
 
 
 def update_state():
