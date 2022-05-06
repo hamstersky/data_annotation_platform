@@ -104,13 +104,16 @@ def create_tabs():
     # Register callbacks and create panels for tables
     for name, params in TABLES.items():
         table = params["object"]
+        panels.append(
+            Panel(child=table, title=" ".join(name.split("_")).capitalize(), name=name)
+        )
+        # The current_frame table doesn't need the same callbacks
+        if name == "current_frame":
+            break
         table.source.selected.on_change("indices", handle_table_row_clicked(table))
         # Update the stats when the data changes
         table.source.on_change("data", lambda attr, old, new: update_stats())
         table.source.on_change("data", clear_selections(table))
-        panels.append(
-            Panel(child=table, title=" ".join(name.split("_")).capitalize(), name=name)
-        )
 
     stats_tab = Panel(child=stats, title="Statistics", name="stats")
     # In the intial state use the description of the first tab
