@@ -10,6 +10,5 @@ current_frame: int
 current_minute: int
 total_frames: int
 uid: str
-active_table: DataTable
 cap: cv2.VideoCapture
 plot = None
