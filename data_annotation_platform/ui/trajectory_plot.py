@@ -1,5 +1,4 @@
-from bokeh.models import ColumnDataSource, HoverTool, Legend
-from bokeh.palettes import RdYlBu3
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
 
 
@@ -9,26 +8,12 @@ class TrajectoryPlot:
         self.cap_w = 640
         self.cap_h = 360
         self.size_scalar = size_scalar
-        self.plot = self.configure_plot()
         self.img_source = ColumnDataSource(data=dict(image=[]))
-        # TODO: Consider having a return method instead
-        # If not, then for consistency also change configure_plot()
+        self.setup_plot()
         self.setup_renderers(trajectories_data, segments_data)
-        self.plot.add_tools(
-            HoverTool(
-                show_arrow=False,
-                line_policy="nearest",
-                renderers=[self.trajectories_lines, self.segments_lines],
-                tooltips=[
-                    ("id", "@id"),
-                    ("frame_in", "@frame_in"),
-                    ("frame_out", "@frame_out"),
-                ],
-            )
-        )
-        self.configure_legend()
+        self.setup_legend()
 
-    def configure_plot(self):
+    def setup_plot(self):
         p = figure(
             tools="pan,wheel_zoom,tap,reset",
             toolbar_location="below",
@@ -44,7 +29,7 @@ class TrajectoryPlot:
         p.outline_line_width = 0
         p.plot_height = int(self.cap_h * self.size_scalar)
         p.plot_width = int(self.cap_w * self.size_scalar)
-        return p
+        self.plot = p
 
     def setup_renderers(self, trajectories_data, segments_data):
         self.img_plot = self.plot.image_rgba(
@@ -106,7 +91,21 @@ class TrajectoryPlot:
             legend_label="correct segments",
         )
 
-    def configure_legend(self):
+    def setup_tools(self):
+        self.plot.add_tools(
+            HoverTool(
+                show_arrow=False,
+                line_policy="nearest",
+                renderers=[self.trajectories_lines, self.segments_lines],
+                tooltips=[
+                    ("id", "@id"),
+                    ("frame_in", "@frame_in"),
+                    ("frame_out", "@frame_out"),
+                ],
+            )
+        )
+
+    def setup_legend(self):
         self.plot.legend.orientation = "horizontal"
         self.plot.legend.spacing = 15
         self.plot.legend.background_fill_alpha = 0.3
