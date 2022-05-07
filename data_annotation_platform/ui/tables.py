@@ -6,8 +6,8 @@ from bokeh.models import (
     Tabs,
     TableColumn,
 )
-from app.helpers import handle_jump_to_frame
 from bokeh.plotting import curdoc
+from app.helpers import handle_jump_to_frame
 
 import ui.state as state
 
@@ -17,6 +17,8 @@ def create_tabs():
     trajectories = state.trajectories
 
     def update_stats():
+        """Updates the statistics text."""
+
         stats.text = f"""
     Number of correct segments: {segments.get_correct_segment_count()}
     Number of incorrect segments: {segments.get_incorrect_segment_count()}
@@ -25,6 +27,8 @@ def create_tabs():
         """
 
     def handle_table_row_clicked(table):
+        """Creates a callback when a row in the table is clicked. The callback jumps to the first frame of the segment in the clicked row."""
+
         def callback(_, old, new):
             if new:
                 frame = table.source.data["frame_in"][new[0]]
@@ -33,29 +37,36 @@ def create_tabs():
         return callback
 
     def handle_tab_switched(attr, old, new):
-        reset_tables = ["wrong_segments", "correct_segments", "new_segments"]
+        """Updates the visibility of the reset label button depending on the active tab."""
+
+        # Defines which tabs should show the reset label button
+        reset_tables = [
+            "wrong_segments",
+            "correct_segments",
+            "new_segments",
+        ]
         reset_btn = curdoc().get_model_by_name("reset-btn")
-        active_tab = tabs.tabs[new].name
+        active_tab = tabs_widget.tabs[new].name
         reset_btn.visible = active_tab in reset_tables
-        tab_description.text = TABLES.get(tabs.tabs[new].name, {}).get(
+        tab_description.text = TABLES.get(tabs_widget.tabs[new].name, {}).get(
             "description", ""
         )
 
     def clear_selections(table):
+        """Clears the selected row(s) in the table."""
+
         def callback(attr, old, new):
             table.source.selected.indices = []
 
         return callback
 
-    # Stats
-    stats = PreText()
-    update_stats()
-
-    # Settings for all tables
+    # All tables share these columns
     columns = [
         TableColumn(field=c, title=c) for c in ["id", "frame_in", "frame_out", "class"]
     ]
-    table_params = {
+
+    # Default settings for all tables
+    table_settings = {
         "columns": columns,
         "index_position": None,
         "height": 250,
@@ -63,23 +74,18 @@ def create_tabs():
         "tags": ["table"],
     }
 
-    # Incorrect segments component
+    trajectories_table = DataTable(source=trajectories.get_source(), **table_settings)
     incorrect_segments_table = DataTable(
         source=segments.incorrect_source,
-        **{key: table_params[key] for key in table_params if key != "columns"},
+        # exclude the default columns
+        **{key: table_settings[key] for key in table_settings if key != "columns"},
+        # expand the default columns with a another one for comments
         columns=[*columns, TableColumn(field="comments", title="comments")],
     )
+    correct_segments_table = DataTable(source=segments.correct_source, **table_settings)
+    new_segments_table = DataTable(source=segments.new_source, **table_settings)
 
-    # Candidates table
-    # TODO: Add euclidean distance
-    trajectories_table = DataTable(source=trajectories.get_source(), **table_params)
-
-    # New segments table
-    new_segments_table = DataTable(source=segments.new_source, **table_params)
-
-    # Correct segments table
-    correct_segments_table = DataTable(source=segments.correct_source, **table_params)
-
+    # Define names and descriptions for the tables created above
     TABLES = {
         "current_frame": {
             "object": trajectories_table,
@@ -100,7 +106,7 @@ def create_tabs():
     }
 
     panels = []
-    # Register callbacks and create panels for tables
+    # Register callbacks and create panels for all tables
     for name, params in TABLES.items():
         table = params["object"]
         panels.append(
@@ -114,16 +120,21 @@ def create_tabs():
         table.source.on_change("data", lambda attr, old, new: update_stats())
         table.source.on_change("data", clear_selections(table))
 
+    # Add another tab for statistics
+    stats = PreText()
+    update_stats()  # Set up the initial statistics
     stats_tab = Panel(child=stats, title="Statistics", name="stats")
-    # In the intial state use the description of the first tab
-    tab_description = Paragraph(text=TABLES[list(TABLES.keys())[0]]["description"])
-    tabs = Tabs(
+
+    tabs_widget = Tabs(
         tabs=[
             *panels,
             stats_tab,
         ],
         height=280,
     )
-    tabs.on_change("active", handle_tab_switched)
+    tabs_widget.on_change("active", handle_tab_switched)
 
-    return [tab_description, tabs]
+    # In the intial state use the description of the first tab
+    tab_description = Paragraph(text=TABLES[list(TABLES.keys())[0]]["description"])
+
+    return [tab_description, tabs_widget]
