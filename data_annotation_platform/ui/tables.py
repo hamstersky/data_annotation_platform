@@ -6,7 +6,7 @@ from bokeh.models import (
     Tabs,
     TableColumn,
 )
-from handle_jump_to_frame import handle_jump_to_frame
+from app.helpers import handle_jump_to_frame
 from bokeh.plotting import curdoc
 
 import ui.state as state

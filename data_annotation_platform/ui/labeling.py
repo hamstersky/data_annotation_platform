@@ -17,7 +17,7 @@ def create_labeling_controls():
             segment = state.segments.create_segment(t1, t2)
             state.segments.append_segment(segment)
             new_frame = int(segment["frame_out"])
-            handle_label_changed(new_frame)
+            update_frame("", 0, new_frame)
 
     def handle_reset_label():
         ids = []
@@ -26,19 +26,14 @@ def create_labeling_controls():
             for i in source.selected.indices:
                 ids.append(source.data["id"][i])
         state.segments.set_status(status=None, comments="", ids=ids)
-        handle_label_changed(state.current_frame)
+        update_frame("", 0, state.current_frame)
 
     def handle_label_btn_click(label):
         def callback():
             state.segments.set_status(status=label, comments=incorrect_comment.value)
-            handle_label_changed(state.current_frame)
+            update_frame("", 0, state.current_frame)
 
         return callback
-
-    def handle_label_changed(new_frame):
-        update_frame("", 0, new_frame)
-        clear_trajectories()
-        state.segments.update_sources()
 
     segments_labeling_tags = ["labeling", "segments-labeling"]
     trajectories_labeling_tags = ["labeling", "trajectories-labeling"]

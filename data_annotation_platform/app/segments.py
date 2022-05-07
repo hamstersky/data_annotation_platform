@@ -100,7 +100,8 @@ class Segments(DataSource):
         line_dash = [line_style[i] for i in subset["correct"]]
         return dict(line_color=line_color, line_dash=line_dash)
 
-    def update_sources(self):
+    def update_data_source(self, frame_nr):
+        super().update_data_source(frame_nr)
         incorrect = self.get_segments_by_status(False)
         correct = self.get_segments_by_status(True)
         new = self.get_new_segments()
