@@ -40,7 +40,6 @@ def create_tabs():
         tab_description.text = TABLES.get(tabs.tabs[new].name, {}).get(
             "description", ""
         )
-        state.active_table = TABLES.get(active_tab, {}).get("object", None)
 
     def clear_selections(table):
         def callback(attr, old, new):
