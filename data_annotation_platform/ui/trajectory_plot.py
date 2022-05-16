@@ -12,6 +12,7 @@ class TrajectoryPlot:
         self.setup_plot()
         self.setup_renderers(trajectories_data, segments_data)
         self.setup_legend()
+        self.setup_tools()
 
     def setup_plot(self):
         p = figure(
