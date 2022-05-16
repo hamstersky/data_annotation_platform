@@ -1,3 +1,5 @@
+// Adopted from: https://github.com/bokeh/bokeh/blob/branch-3.0/examples/app/export_csv/download.js
+
 function table_to_csv(source) {
     const columns = Object.keys(source.data)
     const nrows = source.get_length()
