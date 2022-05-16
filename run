@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ ! -d "env" ] 
+then
+    python3 -m venv env
+    source env/bin/activate
+    python3 -m pip install -r requirements.txt
+    bokeh serve data_annotation_platform --dev
+else
+    source env/bin/activate
+    bokeh serve data_annotation_platform --dev
+fi

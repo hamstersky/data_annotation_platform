@@ -20,7 +20,7 @@ def initialize_state():
     state.trajectories = Trajectories(settings.trajectories_path)
     state.current_frame = 0
     state.current_minute = 0
-    state.cap = cv2.VideoCapture("./videos/video.m4v")
+    state.cap = cv2.VideoCapture(settings.video_path)
     state.total_frames = int(state.cap.get(cv2.CAP_PROP_FRAME_COUNT))
     state.plot = TrajectoryPlot(state.trajectories, state.segments)
 
