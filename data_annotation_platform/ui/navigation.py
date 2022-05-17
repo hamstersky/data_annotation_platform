@@ -15,7 +15,7 @@ def handle_frame_navigation(value):
 def next_interest_handler():
     frame_ins = state.segments.current_frame_view.data["frame_in"]
     frame = max(frame_ins) if frame_ins else state.current_frame
-    next_frame = state.segments.find_next_interest(int(frame))
+    next_frame = state.segments.get_next_interest_frame(int(frame))
     handle_jump_to_frame("", 0, next_frame)
 
 

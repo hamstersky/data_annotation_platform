@@ -13,22 +13,22 @@ def create_labeling_controls():
         for t1_ID, t2_ID in pairs:
             segment = state.trajectories.connect(t1_ID, t2_ID)
             # TODO: Consider the append being an internal call. Possibly still return the segment
-            state.segments.append_segment(segment)
+            state.segments.add_segment(segment)
             new_frame = int(segment["frame_out"])
             update_frame("", 0, new_frame)
 
     def handle_reset_label():
         ids = []
         # TODO: This could be replaced not to rely on the internals of segments if the currently selected ids are moved to state
-        for source in state.segments.sources:
+        for source in state.segments.views:
             for i in source.selected.indices:
                 ids.append(source.data["id"][i])
-        state.segments.set_status(status=None, comments="", ids=ids)
+        state.segments.update_label(label=None, comments="", ids=ids)
         update_frame("", 0, state.current_frame)
 
     def handle_label_btn_click(label):
         def callback():
-            state.segments.set_status(status=label, comments=incorrect_comment.value)
+            state.segments.update_label(label=label, comments=incorrect_comment.value)
             update_frame("", 0, state.current_frame)
 
         return callback
