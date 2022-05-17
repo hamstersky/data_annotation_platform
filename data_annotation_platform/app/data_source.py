@@ -12,6 +12,7 @@ class DataSource:
     Attributes:
         data: Data loaded from file as a Pandas DataFrame.
         views: List of views extracted from the data. Each of this views is an attribute on its own.
+        current_frame_view: The only default view. This view holds data relevant only to the currently displayed frame.
         selected_ids: IDs of data points currently selected from the UI.
     """
 
