@@ -16,6 +16,7 @@ class Trajectories(DataSource):
 
     def get_frame_subset(self, frame_nr):
         """Returns a subset of data relevant for the given frame."""
+
         return self.data[
             (frame_nr >= self.data["frame_in"])
             & (frame_nr <= self.data["frame_out"] + 400)
@@ -27,6 +28,7 @@ class Trajectories(DataSource):
         The only factor considered in the evaluation of candidates is time.
         Only trajectories that start within 900 frames are considered candidates.
         """
+
         t1 = self.data.iloc[traj_id]
         return self.data[
             (self.data.index == traj_id)
@@ -36,6 +38,7 @@ class Trajectories(DataSource):
 
     def show_candidates(self, traj_id):
         """Updates the current frame view with candidate trajectories."""
+
         subset = self.get_candidates(traj_id)
         line_colors = ["brown" for _ in subset["class"]]
         # Keep the selected trajectory's color green
