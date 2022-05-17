@@ -4,42 +4,42 @@ from app.data_source import DataSource
 
 
 class Trajectories(DataSource):
+    """
+    Class representing a data source specifically for (broken) trajectories.
+    Inherits from DataSource class.
+
+    This class doesn't introduce any new attributes.
+    """
+
     def __init__(self, source_path):
         super().__init__(source_path)
 
     def get_frame_subset(self, frame_nr):
+        """Returns a subset of data relevant for the given frame."""
         return self.data[
             (frame_nr >= self.data["frame_in"])
             & (frame_nr <= self.data["frame_out"] + 400)
         ]
 
-    # TODO: Is this method needed?
     def get_candidates(self, traj_id):
+        """
+        Returns a subset of trajectories that are a good candidate for the trajectory with the given ID.
+        The only factor considered in the evaluation of candidates is time.
+        Only trajectories that start within 900 frames are considered candidates.
+        """
         t1 = self.data.iloc[traj_id]
-        # TODO: What about other classes?
         return self.data[
             (self.data.index == traj_id)
             | (self.data["frame_in"] >= t1["frame_out"])
             & (self.data["frame_out"] <= t1["frame_out"] + 900)
         ]
 
-    def update_source_candidates(self, traj_id):
+    def show_candidates(self, traj_id):
+        """Updates the current frame view with candidate trajectories."""
         subset = self.get_candidates(traj_id)
-        colors = [
-            "red",
-            "magenta",
-            "green",
-            "orange",
-            "cyan",
-            "yellow",
-            "blue",
-            "black",
-            "navy",
-        ]
-        line_colors = ["brown" for i in subset["class"]]
-        # Keep the selected trajectory's color corresponding to it's class
-        line_colors[0] = colors[int(self.data.iloc[traj_id]["class"])]
-        # TODO: Better way to include the id / index?
+        line_colors = ["brown" for _ in subset["class"]]
+        # Keep the selected trajectory's color green
+        line_colors[0] = "green"
         self.current_frame_view.data = {
             **subset.to_dict(orient="list"),
             "id": subset.index.values,

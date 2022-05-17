@@ -43,7 +43,7 @@ def handle_tap(trigger):
         if len(new) > 0:
             selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
             if isinstance(trigger, Trajectories) and not trigger.selected_ids:
-                trigger.update_source_candidates(selected_traj_id)
+                trigger.show_candidates(selected_traj_id)
                 # Needed so that the first trajectory remains the selected one
                 trigger.update_selected_data(old, [0])
             else:
