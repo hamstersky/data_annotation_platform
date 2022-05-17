@@ -103,7 +103,7 @@ class DataSource:
                 view.selected.indices = []
         else:
             # Else, add the new selection to the already selected ids and update the view
-            traj_id = self.get_id_of_selected_trajectory([new[0]])
+            traj_id = self.get_id_of_selected_trajectory(new[0])
             self.selected_ids.append(traj_id)
             self.current_frame_view.selected.indices = old + new
 
