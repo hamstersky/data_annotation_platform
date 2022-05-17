@@ -18,9 +18,9 @@ class Segments(DataSource):
             self.data["new"] = False
             self.data["comments"] = ""
 
-        self._register_source("incorrect_source", self.get_segments_by_status(False))
-        self._register_source("correct_source", self.get_segments_by_status(True))
-        self._register_source("new_source", self.get_new_segments())
+        self._register_view("incorrect_view", self.get_segments_by_status(False))
+        self._register_view("correct_view", self.get_segments_by_status(True))
+        self._register_view("new_view", self.get_new_segments())
 
     def get_frame_subset(self, frame_nr):
         return self.data[
@@ -40,21 +40,6 @@ class Segments(DataSource):
                 self.data.loc[id, ["correct", "comments"]] = np.array(
                     [status, ",".join(comments)], dtype="object"
                 )
-
-    def create_segment(self, t1, t2):
-        segment = pd.DataFrame(
-            {
-                # TODO: Figure out a way to keep the original class and use something else for colors
-                "class": 8,
-                "xs": [[t1["xs"][-1], t2["xs"][0]]],
-                "ys": [[t1["ys"][-1], t2["ys"][0]]],
-                "frame_in": t1["frame_out"],
-                "frame_out": t2["frame_in"],
-                "correct": True,
-                "new": True,
-            }
-        )
-        return segment
 
     def append_segment(self, segment):
         self.data = pd.concat([self.data, segment], ignore_index=True)
@@ -100,20 +85,20 @@ class Segments(DataSource):
         line_dash = [line_style[i] for i in subset["correct"]]
         return dict(line_color=line_color, line_dash=line_dash)
 
-    def update_data_source(self, frame_nr):
-        super().update_data_source(frame_nr)
+    def update_views(self, frame_nr):
+        super().update_views(frame_nr)
         incorrect = self.get_segments_by_status(False)
         correct = self.get_segments_by_status(True)
         new = self.get_new_segments()
-        self.incorrect_source.data = {
+        self.incorrect_view.data = {
             **incorrect.to_dict(orient="list"),
             "id": incorrect.index.values,
         }
-        self.correct_source.data = {
+        self.correct_view.data = {
             **correct.to_dict(orient="list"),
             "id": correct.index.values,
         }
-        self.new_source.data = {
+        self.new_view.data = {
             **new.to_dict(orient="list"),
             "id": new.index.values,
         }

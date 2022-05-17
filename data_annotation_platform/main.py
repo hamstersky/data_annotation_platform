@@ -39,13 +39,10 @@ def handle_tap(trigger):
     def callback(_, old, new):
         # Temporarily remove callback to prevent infinite triggers as the
         # callback itself changes the value of the trigger
-        trigger.get_source().selected._callbacks = {}
+        trigger.current_frame_view.selected._callbacks = {}
         if len(new) > 0:
             selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
-            if (
-                isinstance(trigger, Trajectories)
-                and not trigger.get_selected_trajectories()
-            ):
+            if isinstance(trigger, Trajectories) and not trigger.selected_ids:
                 trigger.update_source_candidates(selected_traj_id)
                 # Needed so that the first trajectory remains the selected one
                 trigger.update_selected_data(old, [0])
@@ -57,7 +54,7 @@ def handle_tap(trigger):
             update_sources([trajectories], state.current_frame)
         update_state()
         # Restore the callback
-        trigger.get_source().selected.on_change("indices", handle_tap(trigger))
+        trigger.current_frame_view.selected.on_change("indices", handle_tap(trigger))
 
     return callback
 
@@ -65,8 +62,8 @@ def handle_tap(trigger):
 # TODO: Find a good place for this
 # Selection callbacks
 # trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
-trajectories.get_source().selected.on_change("indices", handle_tap(trajectories))
-segments.get_source().selected.on_change("indices", handle_tap(segments))
+trajectories.current_frame_view.selected.on_change("indices", handle_tap(trajectories))
+segments.current_frame_view.selected.on_change("indices", handle_tap(segments))
 
 # Setup initial frame
 update_frame("", 1, 1)

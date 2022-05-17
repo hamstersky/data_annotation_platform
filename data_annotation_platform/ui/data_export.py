@@ -5,7 +5,7 @@ import ui.state as state
 
 def create_download_btn():
     dl_button = Button(label="Download")
-    source = ColumnDataSource(state.segments.get_data())
+    source = ColumnDataSource(state.segments.data)
     dl_button.js_on_event(
         "button_click",
         CustomJS(

@@ -74,16 +74,18 @@ def create_tabs():
         "tags": ["table"],
     }
 
-    trajectories_table = DataTable(source=trajectories.get_source(), **table_settings)
+    trajectories_table = DataTable(
+        source=trajectories.current_frame_view, **table_settings
+    )
     incorrect_segments_table = DataTable(
-        source=segments.incorrect_source,
+        source=segments.incorrect_view,
         # exclude the default columns
         **{key: table_settings[key] for key in table_settings if key != "columns"},
         # expand the default columns with a another one for comments
         columns=[*columns, TableColumn(field="comments", title="comments")],
     )
-    correct_segments_table = DataTable(source=segments.correct_source, **table_settings)
-    new_segments_table = DataTable(source=segments.new_source, **table_settings)
+    correct_segments_table = DataTable(source=segments.correct_view, **table_settings)
+    new_segments_table = DataTable(source=segments.new_view, **table_settings)
 
     # Define names and descriptions for the tables created above
     TABLES = {

@@ -31,7 +31,7 @@ def get_image_from_frame(frame):
 
 def update_sources(sources, frame_nr):
     for source in sources:
-        source.update_data_source(frame_nr)
+        source.update_views(frame_nr)
 
 
 def clear_trajectories():
@@ -53,13 +53,13 @@ def update_state():
     segments_labeling = curdoc().select({"tags": "segments-labeling"})
     trajectories_labeling = curdoc().select({"tags": "trajectories-labeling"})
     incorrect_comment = curdoc().get_model_by_name("incorrect-comment")
-    if len(state.trajectories.get_selected_trajectories()) > 1:
+    if len(state.trajectories.selected_ids) > 1:
         for control in segments_labeling:
             control.disabled = True
         for control in trajectories_labeling:
             control.disabled = False
         incorrect_comment.visible = False
-    elif state.segments.get_selected_trajectories():
+    elif state.segments.selected_ids:
         for control in segments_labeling:
             control.disabled = False
         for control in trajectories_labeling:

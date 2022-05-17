@@ -40,7 +40,7 @@ class Trajectories(DataSource):
         # Keep the selected trajectory's color corresponding to it's class
         line_colors[0] = colors[int(self.data.iloc[traj_id]["class"])]
         # TODO: Better way to include the id / index?
-        self.source.data = {
+        self.current_frame_view.data = {
             **subset.to_dict(orient="list"),
             "id": subset.index.values,
             "line_color": line_colors,

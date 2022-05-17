@@ -44,7 +44,7 @@ class TrajectoryPlot:
         )
 
         self.trajectories_lines = self.plot.multi_line(
-            source=trajectories_data.get_source(),
+            source=trajectories_data.current_frame_view,
             line_color="line_color",
             line_alpha=0.8,
             line_width=2.0,
@@ -60,7 +60,7 @@ class TrajectoryPlot:
         )
 
         self.segments_lines = self.plot.multi_line(
-            source=segments_data.get_source(),
+            source=segments_data.current_frame_view,
             line_color="line_color",
             line_alpha=0.8,
             line_width=2.0,

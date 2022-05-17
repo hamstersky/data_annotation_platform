@@ -7,14 +7,12 @@ def create_labeling_controls():
     def handle_connect():
         # Creates segments needed to connect the supplied trajectories (ids)
         # Connections will be done in the order of the supplied ids
-        ids = state.trajectories.get_selected_trajectories()
+        ids = state.trajectories.selected_ids
         pairs = [tuple(map(int, x)) for x in zip(ids, ids[1:])]
         new_frame = 0
         for t1_ID, t2_ID in pairs:
-            t1 = state.trajectories.get_trajectory_by_id(t1_ID)
-            t2 = state.trajectories.get_trajectory_by_id(t2_ID)
+            segment = state.trajectories.connect(t1_ID, t2_ID)
             # TODO: Consider the append being an internal call. Possibly still return the segment
-            segment = state.segments.create_segment(t1, t2)
             state.segments.append_segment(segment)
             new_frame = int(segment["frame_out"])
             update_frame("", 0, new_frame)
