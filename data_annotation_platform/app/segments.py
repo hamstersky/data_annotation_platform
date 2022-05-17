@@ -37,9 +37,7 @@ class Segments(DataSource):
         self._register_view("new_view", self.get_new_segments())
 
     def get_frame_subset(self, frame_nr):
-        """
-        Returns a subset of data relevant for the given frame. It only includes segments that are correct.
-        """
+        """Returns a subset of data relevant for the given frame. It only includes segments that are correct."""
         return self.data[
             (frame_nr >= self.data["frame_in"])
             & (frame_nr <= self.data["frame_out"] + 400)
@@ -70,29 +68,24 @@ class Segments(DataSource):
                 )
 
     def add_segment(self, segment):
-        """
-        Adds a new segment to the data.
-        """
+        """Adds a new segment to the data."""
+
         self.data = pd.concat([self.data, segment], ignore_index=True)
         # For some reason concatenation resets the name of the index so it needs to be set again.
         self.data.index.name = "id"
 
     def get_segments_by_label(self, label):
-        """
-        Returns a subset of data with the given label.
-        """
+        """Returns a subset of data with the given label."""
+
         return self.data[self.data["correct"] == label]
 
     def get_new_segments(self):
-        """
-        Returns a subset of data with only segments manually created by the annotator.
-        """
+        """Returns a subset of data with only segments manually created by the annotator."""
+
         return self.data[self.data["new"] == True]
 
     def get_total_segment_count(self):
-        """
-        Returns count of segments only created by the reconstruction algorithm. Doesn't include manually created segments by the annotator.
-        """
+        """Returns count of segments only created by the reconstruction algorithm. Doesn't include manually created segments by the annotator."""
         return self.data[self.data["new"] == False].shape[0]
 
     def get_correct_segment_count(self):
@@ -114,15 +107,12 @@ class Segments(DataSource):
         ].shape[0]
 
     def get_new_segments_count(self):
-        """
-        Returns count of segments manually created by the annotator.
-        """
+        """Returns count of segments manually created by the annotator."""
         return self.data[(self.data["new"] == True)].shape[0]
 
     def get_correct_incorrect_ratio(self):
-        """
-        Returns the ratio of correct to incorrect segments.
-        """
+        """Returns the ratio of correct to incorrect segments."""
+
         return self.get_correct_segment_count() / self.get_total_segment_count()
 
     def get_next_interest_frame(self, frame_nr):
@@ -137,9 +127,8 @@ class Segments(DataSource):
         )
 
     def get_line_style(self, subset):
-        """
-        Returns styles for lines specific for segments.
-        """
+        """Returns styles for lines specific for segments."""
+
         colors = {True: "navy", None: "red"}
         line_style = {True: "solid", None: "dashed"}
         line_color = [colors[i] for i in subset["correct"]]
@@ -147,9 +136,8 @@ class Segments(DataSource):
         return dict(line_color=line_color, line_dash=line_dash)
 
     def update_views(self, frame_nr):
-        """
-        Updates the default view and views specific for segments.
-        """
+        """Updates the default view and views specific for segments."""
+
         super().update_views(frame_nr)
         incorrect = self.get_segments_by_label(False)
         correct = self.get_segments_by_label(True)
