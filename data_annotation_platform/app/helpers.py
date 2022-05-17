@@ -4,18 +4,18 @@ import settings
 import ui.state as state
 from bokeh.plotting import curdoc
 
-# ===============
-# Helpers
-# ===============
-
 
 def get_frame_from_cap(cap, frame_nr):
+    """Returns the given frame from the video capture."""
+
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_nr)
     _, frame = cap.read()
     return frame
 
 
 def get_image_from_frame(frame):
+    """Returns the frame in a format friendly for plotting."""
+
     img = frame[::-1, :, ::-1]
 
     h, w, _ = img.shape
@@ -29,27 +29,28 @@ def get_image_from_frame(frame):
     return img_orig
 
 
-def update_sources(sources, frame_nr):
-    for source in sources:
-        source.update_views(frame_nr)
-
-
-def clear_trajectories():
+def clear_selected_data():
+    """Clears the currently selected data."""
     state.trajectories.update_selected_data([], [])
     state.segments.update_selected_data([], [])
 
 
-def update_frame(attr, old, frame_nr):
+def refresh_frame(attr, old, frame_nr):
+    """
+    A callback used in many parts of the application.
+    It refreshes the currently plotted frame with the new given frame number.
+    """
     frame = get_frame_from_cap(state.cap, frame_nr)
     img = get_image_from_frame(frame)
-    # plot = curdoc().get_model_by_name("plot")
     state.plot.update_img(img)
     state.current_frame = frame_nr
-    update_sources([state.trajectories, state.segments], frame_nr)
-    clear_trajectories()
+    state.trajectories.update_views(frame_nr)
+    state.segments.update_views(frame_nr)
+    clear_selected_data()
 
 
-def update_state():
+def update_buttons_state():
+    """Updates the state of the buttons depending on the active selection."""
     segments_labeling = curdoc().select({"tags": "segments-labeling"})
     trajectories_labeling = curdoc().select({"tags": "trajectories-labeling"})
     incorrect_comment = curdoc().get_model_by_name("incorrect-comment")
@@ -72,6 +73,7 @@ def update_state():
 
 
 def update_slider_limits():
+    """Updates the frame slider limits according to the current frame."""
     slider = curdoc().get_model_by_name("slider")
     max_minute = state.total_frames // 60 // 30
     slider.start = state.current_minute * settings.FRAME_INTERVAL
@@ -82,6 +84,10 @@ def update_slider_limits():
 
 
 def handle_jump_to_frame(attr, old, new):
+    """
+    A callback used in many parts of the application.
+    It updates the state of the application when an element of frame navigation has been used.
+    """
     slider = curdoc().get_model_by_name("slider")
     state.current_minute = new // 30 // 60
     state.current_frame = new

@@ -1,7 +1,7 @@
 import cv2
 from bokeh.layouts import column, row
 from bokeh.plotting import curdoc
-from app.helpers import clear_trajectories, update_state, update_frame, update_sources
+from app.helpers import clear_selected_data, update_buttons_state, refresh_frame
 from app.segments import Segments
 from app.trajectories import Trajectories
 from ui.trajectory_plot import TrajectoryPlot
@@ -49,10 +49,10 @@ def handle_tap(trigger):
             else:
                 trigger.update_selected_data(old, new)
         else:
-            clear_trajectories()
+            clear_selected_data()
             # Restores state without candidate trajectories
-            update_sources([trajectories], state.current_frame)
-        update_state()
+            trajectories.update_views(state.current_frame)
+        update_buttons_state()
         # Restore the callback
         trigger.current_frame_view.selected.on_change("indices", handle_tap(trigger))
 
@@ -66,7 +66,7 @@ trajectories.current_frame_view.selected.on_change("indices", handle_tap(traject
 segments.current_frame_view.selected.on_change("indices", handle_tap(segments))
 
 # Setup initial frame
-update_frame("", 1, 1)
+refresh_frame("", 1, 1)
 
 save_btn = session.save_progress()
 download_btn = create_download_btn()

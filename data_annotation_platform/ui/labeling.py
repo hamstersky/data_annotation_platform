@@ -1,6 +1,6 @@
 from bokeh.models import Button, MultiChoice
 import ui.state as state
-from app.helpers import update_frame, clear_trajectories, update_state
+from app.helpers import refresh_frame, clear_selected_data, update_buttons_state
 
 
 def create_labeling_controls():
@@ -15,7 +15,7 @@ def create_labeling_controls():
             # TODO: Consider the append being an internal call. Possibly still return the segment
             state.segments.add_segment(segment)
             new_frame = int(segment["frame_out"])
-            update_frame("", 0, new_frame)
+            refresh_frame("", 0, new_frame)
 
     def handle_reset_label():
         ids = []
@@ -24,12 +24,12 @@ def create_labeling_controls():
             for i in source.selected.indices:
                 ids.append(source.data["id"][i])
         state.segments.update_label(label=None, comments="", ids=ids)
-        update_frame("", 0, state.current_frame)
+        refresh_frame("", 0, state.current_frame)
 
     def handle_label_btn_click(label):
         def callback():
             state.segments.update_label(label=label, comments=incorrect_comment.value)
-            update_frame("", 0, state.current_frame)
+            refresh_frame("", 0, state.current_frame)
 
         return callback
 
@@ -72,7 +72,7 @@ def create_labeling_controls():
     correct_btn.on_click(handle_label_btn_click(True))
 
     reset_select_btn = Button(label="Reset selection")
-    reset_select_btn.on_click(clear_trajectories)
+    reset_select_btn.on_click(clear_selected_data)
 
     labeling_controls = [
         reset_select_btn,
@@ -92,6 +92,6 @@ def create_labeling_controls():
     ]
 
     for btn in BUTTONS:
-        btn.on_click(update_state)
+        btn.on_click(update_buttons_state)
 
     return labeling_controls

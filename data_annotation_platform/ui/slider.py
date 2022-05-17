@@ -1,7 +1,7 @@
 import settings
 import ui.state as state
 from app.helpers import update_slider_limits
-from app.helpers import update_frame
+from app.helpers import refresh_frame
 from bokeh.models import Button, Slider
 
 
@@ -26,7 +26,7 @@ def create_slider():
         margin=(0, 15, 0, 15),
         name="slider",
     )
-    slider.on_change("value", update_frame)
+    slider.on_change("value", refresh_frame)
     next_min_btn = Button(label="+1min", width=50)
     next_min_btn.on_click(handle_minute_changed(1))
     prev_min_btn = Button(label="-1min", width=50)
