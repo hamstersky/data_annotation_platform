@@ -1,13 +1,16 @@
 import cv2
 from bokeh.layouts import column, row
 from bokeh.plotting import curdoc
-from app.helpers import clear_selected_data, update_buttons_state, refresh_frame
+from app.helpers import (
+    refresh_frame,
+    handle_tap,
+)
 from app.segments import Segments
 from app.trajectories import Trajectories
 from ui.trajectory_plot import TrajectoryPlot
 import settings
-import ui.session as session
 import ui.state as state
+from ui.session import create_save_progress_btn
 from ui.navigation import create_navigation
 from ui.tables import create_tabs
 from ui.labeling import create_labeling_controls
@@ -16,59 +19,28 @@ from ui.data_export import create_download_btn
 
 
 def initialize_state():
+    """Initializes the state of the application."""
+
     state.segments = Segments(settings.segments_path)
+    state.segments.current_frame_view.selected.on_change(
+        "indices", handle_tap(state.segments)
+    )
     state.trajectories = Trajectories(settings.trajectories_path)
+    state.trajectories.current_frame_view.selected.on_change(
+        "indices", handle_tap(state.trajectories)
+    )
     state.current_frame = 0
     state.current_minute = 0
     state.cap = cv2.VideoCapture(settings.video_path)
     state.total_frames = int(state.cap.get(cv2.CAP_PROP_FRAME_COUNT))
     state.plot = TrajectoryPlot(state.trajectories, state.segments)
+    refresh_frame("", 1, 1)
 
 
 initialize_state()
 
-trajectories = state.trajectories
-segments = state.segments
-
-# ===============
-# Callbacks
-# ===============
-
-
-def handle_tap(trigger):
-    def callback(_, old, new):
-        # Temporarily remove callback to prevent infinite triggers as the
-        # callback itself changes the value of the trigger
-        trigger.current_frame_view.selected._callbacks = {}
-        if len(new) > 0:
-            selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
-            if isinstance(trigger, Trajectories) and not trigger.selected_ids:
-                trigger.show_candidates(selected_traj_id)
-                # Needed so that the first trajectory remains the selected one
-                trigger.update_selected_data(old, [0])
-            else:
-                trigger.update_selected_data(old, new)
-        else:
-            clear_selected_data()
-            # Restores state without candidate trajectories
-            trajectories.update_views(state.current_frame)
-        update_buttons_state()
-        # Restore the callback
-        trigger.current_frame_view.selected.on_change("indices", handle_tap(trigger))
-
-    return callback
-
-
-# TODO: Find a good place for this
-# Selection callbacks
-# trajectories.get_source().selected.on_change('indices', trajectory_tap_handler)
-trajectories.current_frame_view.selected.on_change("indices", handle_tap(trajectories))
-segments.current_frame_view.selected.on_change("indices", handle_tap(segments))
-
-# Setup initial frame
-refresh_frame("", 1, 1)
-
-save_btn = session.save_progress()
+# == Create and add all UI components ==
+save_btn = create_save_progress_btn()
 download_btn = create_download_btn()
 slider_row = row(create_slider())
 jump_to, *btns = create_navigation()

@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import settings
 import ui.state as state
+from app.trajectories import Trajectories
 from bokeh.plotting import curdoc
 
 
@@ -93,3 +94,38 @@ def handle_jump_to_frame(attr, old, new):
     state.current_frame = new
     slider.value = new
     update_slider_limits()
+
+
+def handle_tap(trigger):
+    """
+    Callback generator for clicking on a trajectory or segment in the plot.
+
+    Attributes:
+        trigger: represents what triggered the callback: trajectory or segment
+    """
+
+    def callback(_, old, new):
+        # Temporarily remove callback to prevent infinite triggers as the
+        # callback itself changes the value of the trigger
+        trigger.current_frame_view.selected._callbacks = {}
+        if new:
+            selected_traj_id = trigger.get_id_of_selected_trajectory(new[0])
+            if isinstance(trigger, Trajectories) and not trigger.selected_ids:
+                trigger.show_candidates(selected_traj_id)
+                # Needed so that the first trajectory remains the selected one
+                trigger.update_selected_data(old, [0])
+            else:
+                trigger.update_selected_data(old, new)
+        else:
+            # If new is empty it means that the user clicked on the plot but not on
+            # any specific line. In this case, the plot is reset to a state where
+            # nothing is selected.
+            clear_selected_data()
+            state.trajectories.update_views(state.current_frame)
+
+        update_buttons_state()
+
+        # Restore the callback
+        trigger.current_frame_view.selected.on_change("indices", handle_tap(trigger))
+
+    return callback

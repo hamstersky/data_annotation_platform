@@ -5,7 +5,7 @@ import settings
 import ui.state as state
 
 
-def save_progress():
+def create_save_progress_btn():
     """Returns button for saving progress and add automatic periodic save."""
 
     # JavaScript callback to save a cookie in the user's browser
