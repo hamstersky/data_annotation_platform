@@ -3,8 +3,16 @@ import uuid
 import settings
 import ui.state as state
 
+# app_hooks.py is a special file in Bokeh that allows triggering callbacks
+# at specific points of the application lifecycle
+
 
 def on_session_created(session_context):
+    """
+    Checks for a session cookie in the user's browser.
+    If the cookie exists, load the relevant user data. Otherwise start a new session.
+    """
+
     if "uid" in session_context.request._cookies:
         uid = session_context.request._cookies["uid"]
         state.uid = uid
