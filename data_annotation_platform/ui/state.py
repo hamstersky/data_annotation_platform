@@ -3,6 +3,9 @@ from app.trajectories import Trajectories
 from ui.trajectory_plot import TrajectoryPlot
 import cv2
 
+# This file defines the state of the application that needs to be shared between
+# the different components
+
 segments: Segments
 trajectories: Trajectories
 current_frame: int
