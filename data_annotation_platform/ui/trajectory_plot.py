@@ -1,13 +1,13 @@
 from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
+import ui.styles as styles
 
 
 class TrajectoryPlot:
-    def __init__(self, trajectories_data, segments_data, size_scalar=2):
+    def __init__(self, trajectories_data, segments_data):
         # TODO: Pass as a paremeter
         self.cap_w = 640
         self.cap_h = 360
-        self.size_scalar = size_scalar
         self.img_source = ColumnDataSource(data=dict(image=[]))
         self.setup_plot()
         self.setup_renderers(trajectories_data, segments_data)
@@ -28,8 +28,8 @@ class TrajectoryPlot:
         p.grid.visible = False
         p.axis.visible = False
         p.outline_line_width = 0
-        p.plot_height = int(self.cap_h * self.size_scalar)
-        p.plot_width = int(self.cap_w * self.size_scalar)
+        p.plot_height = styles.PLOT_HEIGHT
+        p.plot_width = styles.PLOT_WIDTH
         self.plot = p
 
     def setup_renderers(self, trajectories_data, segments_data):
