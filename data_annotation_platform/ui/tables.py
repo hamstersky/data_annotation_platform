@@ -8,36 +8,52 @@ from bokeh.models import (
 )
 from bokeh.plotting import curdoc
 from app.helpers import handle_jump_to_frame
+from textwrap import dedent
 
 import ui.state as state
+import ui.styles as styles
+
+
+def handle_table_row_clicked(table):
+    """
+    Callback generator for handling table row clicks.
+    The callback jumps to the first frame of the segment in the clicked row.
+    """
+
+    def callback(attr, old, new):
+        if new:
+            frame = table.source.data["frame_in"][new[0]]
+            handle_jump_to_frame("", 0, frame)
+
+    return callback
+
+
+def clear_selections(table):
+    """Callback generator for clearing the selected row(s) in the given table."""
+
+    def callback(attr, old, new):
+        table.source.selected.indices = []
+
+    return callback
 
 
 def create_tabs():
-    segments = state.segments
-    trajectories = state.trajectories
+    """Returns the panel widget with tabs for different tables."""
 
     def update_stats():
         """Updates the statistics text."""
 
-        stats.text = f"""
-    Number of correct segments: {segments.get_correct_segment_count()}
-    Number of incorrect segments: {segments.get_incorrect_segment_count()}
-    Number of new segments: {segments.get_new_segments_count()}
-    Accuracy: {"{:.2f}".format(segments.get_correct_incorrect_ratio() * 100)}%
-        """
-
-    def handle_table_row_clicked(table):
-        """Creates a callback when a row in the table is clicked. The callback jumps to the first frame of the segment in the clicked row."""
-
-        def callback(_, old, new):
-            if new:
-                frame = table.source.data["frame_in"][new[0]]
-                handle_jump_to_frame("", 0, frame)
-
-        return callback
+        stats.text = dedent(
+            f"""
+                Number of correct segments: {state.segments.get_correct_segment_count()}
+                Number of incorrect segments: {state.segments.get_incorrect_segment_count()}
+                Number of new segments: {state.segments.get_new_segments_count()}
+                Accuracy: {"{:.2f}".format(state.segments.get_correct_incorrect_ratio() * 100)}%
+            """
+        )
 
     def handle_tab_switched(attr, old, new):
-        """Updates the visibility of the reset label button depending on the active tab."""
+        """Callback for updating the visibility of the reset label button depending on the active tab."""
 
         # Defines which tabs should show the reset label button
         reset_tables = [
@@ -52,14 +68,6 @@ def create_tabs():
             "description", ""
         )
 
-    def clear_selections(table):
-        """Clears the selected row(s) in the table."""
-
-        def callback(attr, old, new):
-            table.source.selected.indices = []
-
-        return callback
-
     # All tables share these columns
     columns = [
         TableColumn(field=c, title=c) for c in ["id", "frame_in", "frame_out", "class"]
@@ -69,23 +77,32 @@ def create_tabs():
     table_settings = {
         "columns": columns,
         "index_position": None,
-        "height": 250,
-        "width": 550,
+        "height": styles.TABLE_HEIGHT,
+        "width": styles.TABLE_WIDTH,
         "tags": ["table"],
     }
 
+    # == Table for trajectories on current frame ==
     trajectories_table = DataTable(
-        source=trajectories.current_frame_view, **table_settings
+        source=state.trajectories.current_frame_view, **table_settings
     )
+
+    # == Table for incorrect segments ==
     incorrect_segments_table = DataTable(
-        source=segments.incorrect_view,
+        source=state.segments.incorrect_view,
         # exclude the default columns
         **{key: table_settings[key] for key in table_settings if key != "columns"},
         # expand the default columns with a another one for comments
         columns=[*columns, TableColumn(field="comments", title="comments")],
     )
-    correct_segments_table = DataTable(source=segments.correct_view, **table_settings)
-    new_segments_table = DataTable(source=segments.new_view, **table_settings)
+
+    # == Table for correct segments ==
+    correct_segments_table = DataTable(
+        source=state.segments.correct_view, **table_settings
+    )
+
+    # == Table for new segments ==
+    new_segments_table = DataTable(source=state.segments.new_view, **table_settings)
 
     # Define names and descriptions for the tables created above
     TABLES = {
