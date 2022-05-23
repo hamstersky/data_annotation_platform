@@ -19,7 +19,7 @@ class Trajectories(DataSource):
 
         return self.data[
             (frame_nr >= self.data["frame_in"])
-            & (frame_nr <= self.data["frame_out"] + 400)
+            & (frame_nr <= self.data["frame_out"] + 258)
         ]
 
     def get_candidates(self, traj_id):
