@@ -43,3 +43,9 @@ Below is an outline of the steps performed by the script which can be recreated 
     ```localhost:5006```
 
 Steps 1 and 2 are optional but highly recommended. The virtual environment avoids version conflicts with packages that might be already installed globally on the machine. It also avoids cluttering the global Python installation with packages only relevant to this project.
+
+## Prototypes
+
+The initial prototypes developed for this project can be found in the folders ```dash_prototype``` and ```bokeh_prototype```.
+
+They both contain a run script like the one described earlier. Since they're prototypes, they're not documented in more detail.
