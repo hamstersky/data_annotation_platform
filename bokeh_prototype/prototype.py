@@ -28,7 +28,9 @@ cap = cv2.VideoCapture('../videos/video.m4v')
 ret = True
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 data = pd.read_pickle('../data/broken_trajectories.pkl')
+data.reset_index(inplace=True)
 segments = pd.read_pickle('../data/segments.pkl')
+segments.reset_index(inplace=True)
 segments = segments[['id', 'xs', 'ys', 'class', 'frame_in', 'frame_out']]
 # Add column for keeping track of correct / incorrect connections
 segments['correct'] = True
