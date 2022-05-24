@@ -1,7 +1,4 @@
 #!/bin/bash
-source venv/bin/activate
-
-#!/bin/bash
 if [ ! -d "env" ]
 then
     python3 -m venv env
@@ -10,4 +7,5 @@ then
     bokeh serve prototype.py --dev prototype.py
 else
     source env/bin/activate
+    bokeh serve prototype.py --dev prototype.py
 fi
