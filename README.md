@@ -11,6 +11,8 @@ It is assumed that the following prerequisites are satisfied on the machine:
 2. The dataset is located inside the ```data_annotation_platform/data``` directory. Two files are required: ```broken_trajectorie.pkl``` and ```segments.pkl```.
 3. The video recording is located inside the ```data_annotation_platform/video``` directory. The file should be named ```video``` and ```mp4``` format.
 
+The appendix to the project includes a separate zip with the data and the video necessary to run the project.
+
 ### Install using a bash script
 The easiest way to set up the platform on a local environment is to use the  ```run``` bash script included in the source code. The script assumes that the dependencies from the previous section are satisfied.
 
