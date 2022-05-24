@@ -120,11 +120,15 @@ class Segments(DataSource):
         Returns the frame number of the next frame with a point of interest relative to the current frame .
         A point of interest is defined as a segment without a label.
         """
-        return int(
-            self.data[
-                (self.data["frame_in"] > frame_nr) & (pd.isna(self.data["correct"]))
-            ]["frame_in"].min()
-        )
+        next = self.data[
+            (self.data["frame_in"] > frame_nr) & (pd.isna(self.data["correct"]))
+        ]["frame_in"].min()
+
+        # If there's no next interest just return the input frame
+        if np.isnan(next):
+            return frame_nr
+
+        return int(next)
 
     def get_line_style(self, subset):
         """Returns styles for lines specific for segments."""
