@@ -1,6 +1,7 @@
 from bokeh.models import Button, MultiChoice
+
+from app.helpers import clear_selected_data, refresh_frame, update_buttons_state
 import ui.state as state
-from app.helpers import refresh_frame, clear_selected_data, update_buttons_state
 
 
 def handle_connect():

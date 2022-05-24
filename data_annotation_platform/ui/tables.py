@@ -1,15 +1,9 @@
-from bokeh.models import (
-    DataTable,
-    Panel,
-    Paragraph,
-    PreText,
-    Tabs,
-    TableColumn,
-)
-from bokeh.plotting import curdoc
-from app.helpers import handle_jump_to_frame
 from textwrap import dedent
 
+from bokeh.models import DataTable, Panel, Paragraph, PreText, TableColumn, Tabs
+from bokeh.plotting import curdoc
+
+from app.helpers import handle_jump_to_frame
 import ui.state as state
 import ui.styles as styles
 

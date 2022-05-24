@@ -1,4 +1,5 @@
 from bokeh.models import Button, NumericInput
+
 from app.helpers import handle_jump_to_frame
 import ui.state as state
 import ui.styles as styles

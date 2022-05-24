@@ -1,7 +1,8 @@
+import cv2
+
 from app.segments import Segments
 from app.trajectories import Trajectories
 from ui.trajectory_plot import TrajectoryPlot
-import cv2
 
 # This file defines the state of the application that needs to be shared between
 # the different components

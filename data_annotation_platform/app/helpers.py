@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
-import settings
-import ui.state as state
-from app.trajectories import Trajectories
 from bokeh.plotting import curdoc
+
+import settings
+from app.trajectories import Trajectories
+import ui.state as state
 
 
 def get_frame_from_cap(cap, frame_nr):

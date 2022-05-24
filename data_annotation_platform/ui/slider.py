@@ -1,9 +1,9 @@
 import settings
-import ui.styles as styles
-import ui.state as state
-from app.helpers import update_slider_limits
-from app.helpers import refresh_frame
 from bokeh.models import Button, Slider
+
+from app.helpers import refresh_frame, update_slider_limits
+import ui.state as state
+import ui.styles as styles
 
 
 def handle_minute_changed(value, slider):

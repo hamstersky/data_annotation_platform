@@ -1,5 +1,7 @@
-from bokeh.models import Button, ColumnDataSource, CustomJS
 import os
+
+from bokeh.models import Button, ColumnDataSource, CustomJS
+
 import ui.state as state
 
 

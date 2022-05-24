@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
+from bokeh.models import ColumnDataSource
 
 from app.data_source import DataSource
-from bokeh.models import ColumnDataSource
 
 
 class Segments(DataSource):

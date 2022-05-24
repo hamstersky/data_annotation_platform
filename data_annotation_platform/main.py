@@ -1,21 +1,19 @@
 import cv2
 from bokeh.layouts import column, row
 from bokeh.plotting import curdoc
-from app.helpers import (
-    refresh_frame,
-    handle_tap,
-)
-from app.segments import Segments
-from app.trajectories import Trajectories
-from ui.trajectory_plot import TrajectoryPlot
+
 import settings
 import ui.state as state
-from ui.session import create_save_progress_btn
-from ui.navigation import create_navigation
-from ui.tables import create_tabs
-from ui.labeling import create_labeling_controls
-from ui.slider import create_slider
+from app.helpers import handle_tap, refresh_frame
+from app.segments import Segments
+from app.trajectories import Trajectories
 from ui.data_export import create_download_btn
+from ui.labeling import create_labeling_controls
+from ui.navigation import create_navigation
+from ui.session import create_save_progress_btn
+from ui.slider import create_slider
+from ui.tables import create_tabs
+from ui.trajectory_plot import TrajectoryPlot
 
 
 def initialize_state():

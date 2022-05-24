@@ -1,7 +1,7 @@
-from bokeh.models import CustomJS, Button
+import settings
+from bokeh.models import Button, CustomJS
 from bokeh.plotting import curdoc
 
-import settings
 import ui.state as state
 
 

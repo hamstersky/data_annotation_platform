@@ -1,5 +1,6 @@
 from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
+
 import ui.styles as styles
 
 
