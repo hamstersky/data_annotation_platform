@@ -1,3 +1,11 @@
 #!/bin/bash
-source venv/bin/activate
-python3 prototype.py
+if [ ! -d "env" ]
+then
+    python3 -m venv env
+    source env/bin/activate
+    python3 -m pip install -r requirements.txt
+    python3 prototype.py
+else
+    source env/bin/activate
+    python3 prototype.py
+fi
