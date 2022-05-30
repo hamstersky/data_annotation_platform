@@ -32,7 +32,7 @@ p.grid.visible = False
 p.axis.visible = False
 p.outline_line_width = 0
 
-cap = cv2.VideoCapture("./video/video.m4v")
+cap = cv2.VideoCapture("./video/video.mp4")
 ret = True
 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 data = pd.read_pickle("./data/broken_trajectories.pkl")
