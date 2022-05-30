@@ -51,3 +51,5 @@ Steps 1 and 2 are optional but highly recommended. The virtual environment avoid
 The initial prototypes developed for this project can be found in the folders ```dash_prototype``` and ```bokeh_prototype```.
 
 They both contain a run script like the one described earlier. Since they're prototypes, they're not documented in more detail.
+
+The prerequisites listed before also apply to the prototypes.
