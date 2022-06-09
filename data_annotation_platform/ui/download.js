@@ -4,12 +4,15 @@ function table_to_csv(source) {
     const columns = Object.keys(source.data)
     const nrows = source.get_length()
     const lines = [columns.join(',')]
-
     for (let i = 0; i < nrows; i++) {
         let row = [];
         for (let j = 0; j < columns.length; j++) {
             const column = columns[j]
-            row.push(source.data[column][i].toString())
+            if (column == 'comments') {
+                row.push("\"" + source.data[column][i].toString() + "\"");
+            } else {
+                row.push(source.data[column][i].toString())
+            }
         }
         lines.push(row.join(','))
     }
